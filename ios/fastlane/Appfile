@@ -1,0 +1,120 @@
+# Appfile - App Store Connect Configuration
+# This file contains the configuration for your app's identity
+# Version: 2.0.0
+
+# ============================================================================
+# APP IDENTIFIER
+# ============================================================================
+
+# The bundle identifier of your app
+# Can be overridden using environment variable
+app_identifier(ENV['APP_IDENTIFIER'] || 'com.company.app')
+
+# ============================================================================
+# APPLE ID CREDENTIALS
+# ============================================================================
+
+# Your Apple Developer Portal email address
+# For CI/CD, this should be a service account email
+apple_id(ENV['APPLE_ID'] || 'developer@company.com')
+
+# ============================================================================
+# TEAM CONFIGURATION
+# ============================================================================
+
+# Developer Portal Team ID
+# Find this at https://developer.apple.com/account/#/membership
+team_id(ENV['TEAM_ID'] || 'XXXXXXXXXX')
+
+# App Store Connect Team ID (if different from Developer Portal)
+# Usually the same as team_id for most organizations
+itc_team_id(ENV['ITC_TEAM_ID'] || ENV['TEAM_ID'] || 'XXXXXXXXXX')
+
+# ============================================================================
+# LANE-SPECIFIC CONFIGURATION
+# ============================================================================
+
+# Different configurations for different lanes
+# Useful for organizations with multiple apps or teams
+
+for_lane :beta do
+  # Beta/TestFlight specific settings
+  app_identifier(ENV['APP_IDENTIFIER'] || 'com.company.app')
+end
+
+for_lane :release do
+  # Production release specific settings
+  app_identifier(ENV['APP_IDENTIFIER'] || 'com.company.app')
+end
+
+for_lane :enterprise do
+  # Enterprise distribution settings (if applicable)
+  app_identifier(ENV['ENTERPRISE_APP_IDENTIFIER'] || 'com.company.enterprise.app')
+  team_id(ENV['ENTERPRISE_TEAM_ID'] || 'YYYYYYYYYY')
+end
+
+# ============================================================================
+# APP EXTENSIONS
+# ============================================================================
+
+# If your app has extensions, list their bundle identifiers here
+# These will be used by match for code signing
+
+for_lane :setup_signing do
+  # Main app
+  app_identifier([
+    ENV['APP_IDENTIFIER'] || 'com.company.app',
+    # Widget Extension
+    "#{ENV['APP_IDENTIFIER'] || 'com.company.app'}.widget",
+    # Notification Service Extension
+    "#{ENV['APP_IDENTIFIER'] || 'com.company.app'}.notification-service",
+    # Share Extension
+    "#{ENV['APP_IDENTIFIER'] || 'com.company.app'}.share",
+    # Intent Extension (Siri)
+    "#{ENV['APP_IDENTIFIER'] || 'com.company.app'}.intents",
+    # Watch App
+    "#{ENV['APP_IDENTIFIER'] || 'com.company.app'}.watchkitapp",
+    # Watch Extension
+    "#{ENV['APP_IDENTIFIER'] || 'com.company.app'}.watchkitapp.watchkitextension"
+  ])
+end
+
+# ============================================================================
+# API KEY AUTHENTICATION (Recommended for CI/CD)
+# ============================================================================
+
+# App Store Connect API Key configuration
+# This is the recommended authentication method for CI/CD
+# Generate an API key at: https://appstoreconnect.apple.com/access/api
+
+# API Key ID (e.g., "XXXXXXXXXX")
+# ENV['APP_STORE_CONNECT_API_KEY_ID']
+
+# Issuer ID (e.g., "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")
+# ENV['APP_STORE_CONNECT_ISSUER_ID']
+
+# API Key Content (the .p8 file content, base64 encoded)
+# ENV['APP_STORE_CONNECT_API_KEY_CONTENT']
+
+# ============================================================================
+# NOTES
+# ============================================================================
+
+# 1. Environment Variables
+#    Always prefer environment variables for sensitive data
+#    Never commit actual credentials to version control
+#
+# 2. Multiple Apps
+#    If managing multiple apps, consider using separate Appfiles
+#    or lane-specific configurations
+#
+# 3. API Key vs Apple ID
+#    API Key authentication is preferred for CI/CD:
+#    - No 2FA prompts
+#    - More secure (revocable, limited scope)
+#    - Better audit trail
+#
+# 4. Team IDs
+#    - Find Developer Portal Team ID in Membership section
+#    - Find App Store Connect Team ID in Users and Access
+#    - They're usually the same for most organizations

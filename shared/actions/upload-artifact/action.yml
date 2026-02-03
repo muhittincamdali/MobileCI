@@ -1,0 +1,249 @@
+# Upload Artifact Composite Action
+# Upload and optionally distribute build artifacts
+# Version: 2.0.0
+
+name: 'Upload Artifact'
+description: 'Upload build artifacts with metadata and optional distribution'
+
+inputs:
+  name:
+    description: 'Artifact name'
+    required: true
+  
+  path:
+    description: 'Path to artifact(s) to upload'
+    required: true
+  
+  platform:
+    description: 'Platform (ios, android, flutter, react-native)'
+    required: false
+    default: ''
+  
+  version:
+    description: 'App version'
+    required: false
+    default: ''
+  
+  build-number:
+    description: 'Build number'
+    required: false
+    default: ''
+  
+  retention-days:
+    description: 'Number of days to retain artifact'
+    required: false
+    default: '30'
+  
+  compression-level:
+    description: 'Compression level (0-9)'
+    required: false
+    default: '6'
+  
+  if-no-files-found:
+    description: 'Action when no files found (warn, error, ignore)'
+    required: false
+    default: 'warn'
+  
+  include-metadata:
+    description: 'Include build metadata file'
+    required: false
+    default: 'true'
+  
+  distribute-to:
+    description: 'Distribution target (none, firebase, appcenter)'
+    required: false
+    default: 'none'
+  
+  firebase-app-id:
+    description: 'Firebase App ID for distribution'
+    required: false
+    default: ''
+  
+  firebase-groups:
+    description: 'Firebase distribution groups'
+    required: false
+    default: 'testers'
+  
+  appcenter-token:
+    description: 'AppCenter API token'
+    required: false
+    default: ''
+  
+  appcenter-app:
+    description: 'AppCenter app name (owner/app)'
+    required: false
+    default: ''
+
+outputs:
+  artifact-id:
+    description: 'Uploaded artifact ID'
+    value: ${{ steps.upload.outputs.artifact-id }}
+  
+  artifact-url:
+    description: 'URL to download artifact'
+    value: ${{ steps.upload.outputs.artifact-url }}
+  
+  distribution-url:
+    description: 'URL from distribution (if distributed)'
+    value: ${{ steps.distribute.outputs.url }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Validate inputs
+      shell: bash
+      run: |
+        if [ ! -e "${{ inputs.path }}" ]; then
+          case "${{ inputs.if-no-files-found }}" in
+            error)
+              echo "::error::No files found at: ${{ inputs.path }}"
+              exit 1
+              ;;
+            warn)
+              echo "::warning::No files found at: ${{ inputs.path }}"
+              ;;
+            ignore)
+              echo "No files found at: ${{ inputs.path }}"
+              ;;
+          esac
+        fi
+
+    - name: Generate metadata
+      if: inputs.include-metadata == 'true'
+      shell: bash
+      run: |
+        METADATA_DIR=$(mktemp -d)
+        METADATA_FILE="$METADATA_DIR/build-metadata.json"
+        
+        cat > "$METADATA_FILE" << EOF
+        {
+          "artifact_name": "${{ inputs.name }}",
+          "platform": "${{ inputs.platform }}",
+          "version": "${{ inputs.version }}",
+          "build_number": "${{ inputs.build-number }}",
+          "repository": "${{ github.repository }}",
+          "branch": "${{ github.ref_name }}",
+          "commit_sha": "${{ github.sha }}",
+          "commit_message": $(echo '${{ github.event.head_commit.message }}' | head -1 | jq -Rs .),
+          "workflow": "${{ github.workflow }}",
+          "run_id": "${{ github.run_id }}",
+          "run_number": "${{ github.run_number }}",
+          "actor": "${{ github.actor }}",
+          "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+          "runner_os": "${{ runner.os }}",
+          "runner_arch": "${{ runner.arch }}"
+        }
+        EOF
+        
+        echo "METADATA_FILE=$METADATA_FILE" >> $GITHUB_ENV
+
+    - name: Calculate artifact size
+      id: size
+      shell: bash
+      run: |
+        if [ -d "${{ inputs.path }}" ]; then
+          SIZE=$(du -sh "${{ inputs.path }}" | cut -f1)
+        elif [ -f "${{ inputs.path }}" ]; then
+          SIZE=$(du -h "${{ inputs.path }}" | cut -f1)
+        else
+          SIZE="unknown"
+        fi
+        echo "size=$SIZE" >> $GITHUB_OUTPUT
+
+    - name: Upload artifact
+      id: upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.name }}
+        path: |
+          ${{ inputs.path }}
+          ${{ env.METADATA_FILE }}
+        retention-days: ${{ inputs.retention-days }}
+        compression-level: ${{ inputs.compression-level }}
+        if-no-files-found: ${{ inputs.if-no-files-found }}
+
+    - name: Distribute to Firebase
+      id: firebase
+      if: inputs.distribute-to == 'firebase' && inputs.firebase-app-id != ''
+      shell: bash
+      run: |
+        echo "Distributing to Firebase App Distribution..."
+        
+        # Find the artifact file
+        ARTIFACT=$(find "${{ inputs.path }}" -name "*.apk" -o -name "*.ipa" | head -1)
+        
+        if [ -z "$ARTIFACT" ]; then
+          echo "::warning::No distributable artifact found"
+          exit 0
+        fi
+        
+        # Install Firebase CLI if needed
+        if ! command -v firebase &> /dev/null; then
+          curl -sL https://firebase.tools | bash
+        fi
+        
+        # Distribute
+        firebase appdistribution:distribute "$ARTIFACT" \
+          --app "${{ inputs.firebase-app-id }}" \
+          --groups "${{ inputs.firebase-groups }}" \
+          --release-notes "Build ${{ inputs.build-number }} from ${{ github.ref_name }}"
+
+    - name: Distribute to AppCenter
+      id: appcenter
+      if: inputs.distribute-to == 'appcenter' && inputs.appcenter-token != ''
+      shell: bash
+      run: |
+        echo "Distributing to AppCenter..."
+        
+        # Find the artifact file
+        ARTIFACT=$(find "${{ inputs.path }}" -name "*.apk" -o -name "*.ipa" | head -1)
+        
+        if [ -z "$ARTIFACT" ]; then
+          echo "::warning::No distributable artifact found"
+          exit 0
+        fi
+        
+        # Install AppCenter CLI if needed
+        if ! command -v appcenter &> /dev/null; then
+          npm install -g appcenter-cli
+        fi
+        
+        # Upload
+        appcenter distribute release \
+          --app "${{ inputs.appcenter-app }}" \
+          --file "$ARTIFACT" \
+          --group "Collaborators" \
+          --token "${{ inputs.appcenter-token }}" \
+          --release-notes "Build ${{ inputs.build-number }}"
+
+    - name: Distribution result
+      id: distribute
+      shell: bash
+      run: |
+        URL=""
+        if [ "${{ inputs.distribute-to }}" == "firebase" ]; then
+          URL="https://console.firebase.google.com/project/_/appdistribution"
+        elif [ "${{ inputs.distribute-to }}" == "appcenter" ]; then
+          URL="https://appcenter.ms/apps"
+        fi
+        echo "url=$URL" >> $GITHUB_OUTPUT
+
+    - name: Summary
+      shell: bash
+      run: |
+        echo "### Artifact Upload" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+        echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Name | ${{ inputs.name }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Size | ${{ steps.size.outputs.size }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Retention | ${{ inputs.retention-days }} days |" >> $GITHUB_STEP_SUMMARY
+        if [ -n "${{ inputs.version }}" ]; then
+          echo "| Version | ${{ inputs.version }} |" >> $GITHUB_STEP_SUMMARY
+        fi
+        if [ -n "${{ inputs.build-number }}" ]; then
+          echo "| Build | ${{ inputs.build-number }} |" >> $GITHUB_STEP_SUMMARY
+        fi
+        if [ "${{ inputs.distribute-to }}" != "none" ]; then
+          echo "| Distributed To | ${{ inputs.distribute-to }} |" >> $GITHUB_STEP_SUMMARY
+        fi

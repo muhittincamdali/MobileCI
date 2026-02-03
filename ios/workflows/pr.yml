@@ -1,0 +1,409 @@
+# iOS Pull Request Workflow
+# Validate pull requests with builds, tests, and code quality checks
+# Version: 2.0.0
+
+name: iOS PR Check
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+      - 'release/**'
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+
+concurrency:
+  group: ios-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  WORKSPACE_NAME: App.xcworkspace
+  SCHEME_NAME: App
+  XCODE_VERSION: '15.2'
+  RUBY_VERSION: '3.2'
+  MIN_COVERAGE: '70'
+
+jobs:
+  # ===========================================================================
+  # PR METADATA
+  # ===========================================================================
+  metadata:
+    name: PR Metadata
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    outputs:
+      is_swift_change: ${{ steps.changes.outputs.swift }}
+      is_config_change: ${{ steps.changes.outputs.config }}
+      is_docs_only: ${{ steps.changes.outputs.docs_only }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Detect changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            swift:
+              - '**/*.swift'
+              - '**/*.m'
+              - '**/*.h'
+            config:
+              - 'Podfile*'
+              - 'Package.swift'
+              - 'Package.resolved'
+              - '*.xcconfig'
+            docs_only:
+              - '**/*.md'
+              - 'docs/**'
+              - '!**/*.swift'
+              - '!**/*.m'
+              - '!**/*.h'
+      
+      - name: PR info
+        run: |
+          echo "PR #${{ github.event.pull_request.number }}"
+          echo "Title: ${{ github.event.pull_request.title }}"
+          echo "Swift changes: ${{ steps.changes.outputs.swift }}"
+          echo "Config changes: ${{ steps.changes.outputs.config }}"
+          echo "Docs only: ${{ steps.changes.outputs.docs_only }}"
+
+  # ===========================================================================
+  # LINT & FORMAT
+  # ===========================================================================
+  lint:
+    name: Lint & Format
+    runs-on: macos-14
+    needs: metadata
+    if: needs.metadata.outputs.is_docs_only != 'true'
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Install tools
+        run: |
+          brew install swiftlint swiftformat
+      
+      - name: Run SwiftLint
+        run: |
+          swiftlint lint --reporter github-actions-logging
+      
+      - name: Check SwiftFormat
+        run: |
+          ISSUES=$(swiftformat --lint . 2>&1 || true)
+          if [ -n "$ISSUES" ]; then
+            echo "::warning::SwiftFormat found issues:"
+            echo "$ISSUES"
+          fi
+      
+      - name: Check file headers
+        run: |
+          echo "Checking for missing license headers..."
+          MISSING=$(find . -name "*.swift" -not -path "./Pods/*" -not -path "./.build/*" | while read f; do
+            if ! head -5 "$f" | grep -q "Copyright"; then
+              echo "$f"
+            fi
+          done)
+          
+          if [ -n "$MISSING" ]; then
+            echo "::notice::Files missing copyright headers:"
+            echo "$MISSING"
+          fi
+
+  # ===========================================================================
+  # BUILD CHECK
+  # ===========================================================================
+  build:
+    name: Build Check
+    runs-on: macos-14
+    needs: metadata
+    if: needs.metadata.outputs.is_docs_only != 'true'
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
+      
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+      
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: |
+            Pods
+            ~/.cocoapods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+      
+      - name: Cache Derived Data
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-derived-pr-${{ github.event.pull_request.number }}
+          restore-keys: |
+            ${{ runner.os }}-derived-
+      
+      - name: Install dependencies
+        run: |
+          bundle install --jobs 4 --retry 3
+          bundle exec pod install
+      
+      - name: Build for testing
+        run: |
+          set -o pipefail
+          
+          xcodebuild build-for-testing \
+            -workspace "${{ env.WORKSPACE_NAME }}" \
+            -scheme "${{ env.SCHEME_NAME }}" \
+            -destination "platform=iOS Simulator,name=iPhone 15 Pro,OS=17.2" \
+            -configuration Debug \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            | xcpretty --color
+
+  # ===========================================================================
+  # UNIT TESTS
+  # ===========================================================================
+  test:
+    name: Unit Tests
+    runs-on: macos-14
+    needs: [metadata, build]
+    if: needs.metadata.outputs.is_docs_only != 'true'
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
+      
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+      
+      - name: Restore caches
+        uses: actions/cache@v4
+        with:
+          path: |
+            Pods
+            ~/.cocoapods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+      
+      - name: Install dependencies
+        run: |
+          bundle install --jobs 4 --retry 3
+          bundle exec pod install
+      
+      - name: Run tests
+        run: |
+          set -o pipefail
+          
+          xcodebuild test \
+            -workspace "${{ env.WORKSPACE_NAME }}" \
+            -scheme "${{ env.SCHEME_NAME }}" \
+            -destination "platform=iOS Simulator,name=iPhone 15 Pro,OS=17.2" \
+            -enableCodeCoverage YES \
+            -resultBundlePath ./TestResults.xcresult \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            | xcpretty --color --report junit --output ./test-results.xml
+      
+      - name: Generate coverage report
+        run: |
+          xcrun xccov view --report --json ./TestResults.xcresult > coverage.json
+          
+          # Extract coverage percentage
+          COVERAGE=$(python3 << 'EOF'
+          import json
+          with open('coverage.json') as f:
+              data = json.load(f)
+          for t in data.get('targets', []):
+              if 'App' in t.get('name', ''):
+                  print(f"{t.get('lineCoverage', 0) * 100:.1f}")
+                  break
+          EOF
+          )
+          
+          echo "COVERAGE=$COVERAGE" >> $GITHUB_ENV
+          echo "Code coverage: ${COVERAGE}%"
+      
+      - name: Comment coverage on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const coverage = process.env.COVERAGE;
+            const minCoverage = '${{ env.MIN_COVERAGE }}';
+            const status = parseFloat(coverage) >= parseFloat(minCoverage) ? '' : '';
+            
+            const body = `## Code Coverage Report ${status}
+            
+            | Metric | Value |
+            |--------|-------|
+            | Line Coverage | **${coverage}%** |
+            | Minimum Required | ${minCoverage}% |
+            
+            ${parseFloat(coverage) < parseFloat(minCoverage) ? 
+              '> Coverage is below the minimum threshold. Please add more tests.' : 
+              'Coverage meets the minimum threshold.'}`;
+            
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(c => 
+              c.user.type === 'Bot' && c.body.includes('Code Coverage Report')
+            );
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pr-test-results
+          path: |
+            test-results.xml
+            coverage.json
+          retention-days: 7
+      
+      - name: Publish test report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Unit Test Results
+          path: test-results.xml
+          reporter: java-junit
+
+  # ===========================================================================
+  # PR SIZE CHECK
+  # ===========================================================================
+  size-check:
+    name: PR Size Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Check PR size
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            
+            const additions = pr.additions;
+            const deletions = pr.deletions;
+            const total = additions + deletions;
+            const files = pr.changed_files;
+            
+            let size = 'XS';
+            let emoji = '';
+            
+            if (total > 1000 || files > 50) {
+              size = 'XL';
+              emoji = '';
+            } else if (total > 500 || files > 25) {
+              size = 'L';
+              emoji = '';
+            } else if (total > 200 || files > 15) {
+              size = 'M';
+              emoji = '';
+            } else if (total > 50 || files > 5) {
+              size = 'S';
+              emoji = '';
+            }
+            
+            const body = `## PR Size: ${size} ${emoji}
+            
+            | Metric | Count |
+            |--------|-------|
+            | Files Changed | ${files} |
+            | Additions | +${additions} |
+            | Deletions | -${deletions} |
+            | Total Changes | ${total} |
+            
+            ${size === 'XL' ? '> Consider breaking this PR into smaller pieces for easier review.' : ''}`;
+            
+            console.log(body);
+            
+            // Add size label
+            try {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: [`size/${size}`]
+              });
+            } catch (e) {
+              console.log('Could not add label:', e.message);
+            }
+
+  # ===========================================================================
+  # STATUS CHECK
+  # ===========================================================================
+  status:
+    name: PR Status
+    runs-on: ubuntu-latest
+    needs: [lint, build, test]
+    if: always()
+    
+    steps:
+      - name: Check status
+        run: |
+          if [ "${{ needs.lint.result }}" == "failure" ]; then
+            echo "::error::Lint check failed"
+            exit 1
+          fi
+          
+          if [ "${{ needs.build.result }}" == "failure" ]; then
+            echo "::error::Build check failed"
+            exit 1
+          fi
+          
+          if [ "${{ needs.test.result }}" == "failure" ]; then
+            echo "::error::Tests failed"
+            exit 1
+          fi
+          
+          echo "All PR checks passed!"

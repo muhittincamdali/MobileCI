@@ -1,0 +1,165 @@
+name: Bug Report
+description: Report a bug in the mobile application
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+        Please provide as much detail as possible to help us investigate.
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: Which platform(s) are affected?
+      multiple: true
+      options:
+        - iOS
+        - Android
+        - Flutter iOS
+        - Flutter Android
+        - Flutter Web
+        - React Native iOS
+        - React Native Android
+    validations:
+      required: true
+
+  - type: input
+    id: app-version
+    attributes:
+      label: App Version
+      description: What version of the app are you using?
+      placeholder: e.g., 1.2.3
+    validations:
+      required: true
+
+  - type: input
+    id: os-version
+    attributes:
+      label: OS Version
+      description: What version of the operating system?
+      placeholder: e.g., iOS 17.2, Android 14
+    validations:
+      required: true
+
+  - type: input
+    id: device
+    attributes:
+      label: Device
+      description: What device are you using?
+      placeholder: e.g., iPhone 15 Pro, Samsung Galaxy S24
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of the bug
+      placeholder: Describe the bug...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Go to '...'
+        2. Tap on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: Describe what should happen...
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: Describe what actually happens...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: Frequency
+      description: How often does this bug occur?
+      options:
+        - Always (100%)
+        - Often (50-99%)
+        - Sometimes (10-49%)
+        - Rarely (1-9%)
+        - Once
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is this bug?
+      options:
+        - Critical - App crashes or data loss
+        - High - Major feature broken
+        - Medium - Feature partially broken
+        - Low - Minor issue or cosmetic
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Logs
+      description: If applicable, paste any error logs or crash reports
+      placeholder: Paste logs here...
+      render: shell
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / Videos
+      description: If applicable, add screenshots or videos to help explain the problem
+      placeholder: Drag and drop images/videos here...
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Workaround
+      description: If you found a workaround, please describe it
+      placeholder: Describe any workaround...
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched existing issues to ensure this bug hasn't been reported
+          required: true
+        - label: I have tested on the latest version of the app
+          required: true
+        - label: I have included all relevant information
+          required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem
+      placeholder: Any additional information...

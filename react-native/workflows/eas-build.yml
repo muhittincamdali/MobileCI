@@ -1,0 +1,368 @@
+# React Native EAS Build Workflow
+# Build React Native apps using Expo Application Services
+# Version: 2.0.0
+
+name: EAS Build
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - '**.js'
+      - '**.jsx'
+      - '**.ts'
+      - '**.tsx'
+      - 'package.json'
+      - 'app.json'
+      - 'eas.json'
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Build platform'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - ios
+          - android
+      profile:
+        description: 'Build profile'
+        required: true
+        default: 'development'
+        type: choice
+        options:
+          - development
+          - preview
+          - production
+      submit:
+        description: 'Submit to stores after build'
+        required: false
+        default: 'false'
+        type: boolean
+
+concurrency:
+  group: eas-build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+jobs:
+  # ===========================================================================
+  # PREPARE
+  # ===========================================================================
+  prepare:
+    name: Prepare Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      build_number: ${{ steps.version.outputs.build_number }}
+      profile: ${{ steps.profile.outputs.profile }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+      
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          BUILD_NUMBER="${{ github.run_number }}"
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+      
+      - name: Determine profile
+        id: profile
+        run: |
+          PROFILE="${{ inputs.profile }}"
+          if [ -z "$PROFILE" ]; then
+            if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+              PROFILE="preview"
+            else
+              PROFILE="development"
+            fi
+          fi
+          echo "profile=$PROFILE" >> $GITHUB_OUTPUT
+      
+      - name: Validate eas.json
+        run: |
+          if [ ! -f "eas.json" ]; then
+            echo "::error::eas.json not found"
+            exit 1
+          fi
+          
+          # Validate JSON
+          cat eas.json | jq . > /dev/null
+
+  # ===========================================================================
+  # BUILD IOS
+  # ===========================================================================
+  build-ios:
+    name: Build iOS
+    runs-on: ubuntu-latest
+    needs: prepare
+    if: ${{ inputs.platform != 'android' }}
+    timeout-minutes: 60
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+      
+      - name: Setup EAS CLI
+        run: npm install -g eas-cli
+      
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      
+      - name: Configure EAS
+        run: |
+          eas whoami
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      
+      - name: Update version
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          BUILD_NUMBER="${{ needs.prepare.outputs.build_number }}"
+          
+          # Update app.json
+          node << EOF
+          const fs = require('fs');
+          const app = require('./app.json');
+          
+          app.expo.version = '$VERSION';
+          app.expo.ios = app.expo.ios || {};
+          app.expo.ios.buildNumber = '$BUILD_NUMBER';
+          
+          fs.writeFileSync('./app.json', JSON.stringify(app, null, 2));
+          EOF
+      
+      - name: Build iOS
+        run: |
+          eas build \
+            --platform ios \
+            --profile ${{ needs.prepare.outputs.profile }} \
+            --non-interactive \
+            --no-wait
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      
+      - name: Get build URL
+        id: build
+        run: |
+          BUILD_URL=$(eas build:list --platform ios --limit 1 --json | jq -r '.[0].buildUrl')
+          echo "build_url=$BUILD_URL" >> $GITHUB_OUTPUT
+
+  # ===========================================================================
+  # BUILD ANDROID
+  # ===========================================================================
+  build-android:
+    name: Build Android
+    runs-on: ubuntu-latest
+    needs: prepare
+    if: ${{ inputs.platform != 'ios' }}
+    timeout-minutes: 60
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+      
+      - name: Setup EAS CLI
+        run: npm install -g eas-cli
+      
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      
+      - name: Configure EAS
+        run: |
+          eas whoami
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      
+      - name: Update version
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          BUILD_NUMBER="${{ needs.prepare.outputs.build_number }}"
+          
+          node << EOF
+          const fs = require('fs');
+          const app = require('./app.json');
+          
+          app.expo.version = '$VERSION';
+          app.expo.android = app.expo.android || {};
+          app.expo.android.versionCode = parseInt('$BUILD_NUMBER');
+          
+          fs.writeFileSync('./app.json', JSON.stringify(app, null, 2));
+          EOF
+      
+      - name: Build Android
+        run: |
+          eas build \
+            --platform android \
+            --profile ${{ needs.prepare.outputs.profile }} \
+            --non-interactive \
+            --no-wait
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+  # ===========================================================================
+  # SUBMIT
+  # ===========================================================================
+  submit-ios:
+    name: Submit iOS
+    runs-on: ubuntu-latest
+    needs: [prepare, build-ios]
+    if: ${{ inputs.submit == 'true' && needs.prepare.outputs.profile == 'production' && inputs.platform != 'android' }}
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+      
+      - name: Setup EAS CLI
+        run: npm install -g eas-cli
+      
+      - name: Wait for build
+        run: |
+          echo "Waiting for iOS build to complete..."
+          
+          for i in {1..60}; do
+            STATUS=$(eas build:list --platform ios --limit 1 --json | jq -r '.[0].status')
+            
+            if [ "$STATUS" == "finished" ]; then
+              echo "Build completed!"
+              break
+            elif [ "$STATUS" == "errored" ] || [ "$STATUS" == "canceled" ]; then
+              echo "Build failed with status: $STATUS"
+              exit 1
+            fi
+            
+            echo "Build status: $STATUS (attempt $i/60)"
+            sleep 60
+          done
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      
+      - name: Submit to App Store
+        run: |
+          eas submit \
+            --platform ios \
+            --latest \
+            --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+  submit-android:
+    name: Submit Android
+    runs-on: ubuntu-latest
+    needs: [prepare, build-android]
+    if: ${{ inputs.submit == 'true' && needs.prepare.outputs.profile == 'production' && inputs.platform != 'ios' }}
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+      
+      - name: Setup EAS CLI
+        run: npm install -g eas-cli
+      
+      - name: Wait for build
+        run: |
+          echo "Waiting for Android build to complete..."
+          
+          for i in {1..60}; do
+            STATUS=$(eas build:list --platform android --limit 1 --json | jq -r '.[0].status')
+            
+            if [ "$STATUS" == "finished" ]; then
+              echo "Build completed!"
+              break
+            elif [ "$STATUS" == "errored" ] || [ "$STATUS" == "canceled" ]; then
+              echo "Build failed with status: $STATUS"
+              exit 1
+            fi
+            
+            echo "Build status: $STATUS (attempt $i/60)"
+            sleep 60
+          done
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      
+      - name: Submit to Google Play
+        run: |
+          eas submit \
+            --platform android \
+            --latest \
+            --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+  # ===========================================================================
+  # NOTIFY
+  # ===========================================================================
+  notify:
+    name: Notify
+    runs-on: ubuntu-latest
+    needs: [prepare, build-ios, build-android]
+    if: always()
+    timeout-minutes: 5
+    
+    steps:
+      - name: Notify Slack
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "EAS Build completed",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*EAS Build*\n\nVersion: `${{ needs.prepare.outputs.version }}`\nProfile: `${{ needs.prepare.outputs.profile }}`\niOS: `${{ needs.build-ios.result || 'skipped' }}`\nAndroid: `${{ needs.build-android.result || 'skipped' }}`"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

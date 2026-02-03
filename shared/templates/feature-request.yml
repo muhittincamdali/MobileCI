@@ -1,0 +1,173 @@
+name: Feature Request
+description: Suggest a new feature or enhancement
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature!
+        Please provide as much detail as possible to help us understand your request.
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Target Platform(s)
+      description: Which platform(s) should this feature target?
+      multiple: true
+      options:
+        - iOS
+        - Android
+        - Flutter iOS
+        - Flutter Android
+        - Flutter Web
+        - React Native iOS
+        - React Native Android
+        - All Platforms
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      description: What category does this feature fall into?
+      options:
+        - UI/UX
+        - Performance
+        - Security
+        - Accessibility
+        - Integration
+        - Developer Experience
+        - Testing
+        - CI/CD
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: Describe the problem or pain point this feature would solve
+      placeholder: |
+        As a [type of user], I want [goal] so that [benefit].
+        
+        Currently, I face this problem...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe your proposed solution
+      placeholder: |
+        I would like the app to...
+        
+        This could work by...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Describe any alternative solutions you've considered
+      placeholder: |
+        Alternative 1: ...
+        Alternative 2: ...
+
+  - type: textarea
+    id: user-stories
+    attributes:
+      label: User Stories
+      description: Provide specific user stories for this feature
+      placeholder: |
+        - As a user, I want to...
+        - As an admin, I want to...
+        - As a developer, I want to...
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: What criteria must be met for this feature to be complete?
+      placeholder: |
+        - [ ] Criterion 1
+        - [ ] Criterion 2
+        - [ ] Criterion 3
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - Critical - Blocking work
+        - High - Very important
+        - Medium - Nice to have
+        - Low - Minor improvement
+    validations:
+      required: true
+
+  - type: dropdown
+    id: effort
+    attributes:
+      label: Estimated Effort
+      description: What do you estimate the effort required?
+      options:
+        - Small - A few hours
+        - Medium - A few days
+        - Large - A week or more
+        - Extra Large - Multiple weeks
+        - Unknown
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: Mockups / Designs
+      description: If applicable, add mockups, wireframes, or design references
+      placeholder: Drag and drop images here or provide links to designs...
+
+  - type: textarea
+    id: technical
+    attributes:
+      label: Technical Considerations
+      description: Any technical details, constraints, or dependencies?
+      placeholder: |
+        - Requires API changes
+        - Depends on library X
+        - Security considerations...
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Would you be willing to help implement this feature?
+      options:
+        - label: I would be willing to submit a PR for this feature
+        - label: I would be willing to test this feature
+        - label: I would be willing to write documentation
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched existing issues to ensure this feature hasn't been requested
+          required: true
+        - label: I have provided a clear problem statement
+          required: true
+        - label: I have described a potential solution
+          required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context, references, or screenshots
+      placeholder: Any additional information...
