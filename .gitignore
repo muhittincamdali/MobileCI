@@ -1,36 +1,45 @@
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
+# Xcode
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcworkspace/contents.xcworkspacedata
+/*.gcno
+**/xcshareddata/WorkspaceSettings.xcsettings
 
 # Build
 build/
 DerivedData/
-*.xcworkspace/xcuserdata/
+*.moved-aside
+*.ipa
+*.dSYM.zip
+*.dSYM
 
-# Dependencies
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+Package.resolved
+
+# CocoaPods
 Pods/
-node_modules/
-.packages
-.dart_tool/
 
-# Fastlane
+# Carthage
+Carthage/Build/
+
+# fastlane
 fastlane/report.xml
 fastlane/Preview.html
-fastlane/screenshots/
-fastlane/test_output/
+fastlane/screenshots
+fastlane/test_output
 
-# Environment
-.env
-.env.local
-*.p8
-*.p12
-*.mobileprovision
-*.cer
+# macOS
+.DS_Store
+*.swp
+*~.nib
+*.pbxuser
+!default.pbxuser
+
+# IDE
+*.xcuserstate
+*.xcscmblueprint
+*.idea/

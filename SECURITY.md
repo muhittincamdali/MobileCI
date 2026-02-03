@@ -9,60 +9,45 @@
 
 ## Reporting a Vulnerability
 
-We take security seriously. CI/CD systems handle sensitive credentials and deployment pipelines.
+We take the security of SwiftRouter seriously. If you have discovered a security vulnerability, we appreciate your help in disclosing it to us in a responsible manner.
 
 ### How to Report
 
-1. **Do NOT** open a public issue
-2. Email details to the repository owner
-3. Include:
-   - Description of the vulnerability
-   - Steps to reproduce
-   - Potential impact
-   - Suggested fix (if any)
+**Please do not report security vulnerabilities through public GitHub issues.**
+
+Instead, please report them via email to the repository owner. You can find contact information on the GitHub profile.
+
+Please include the following information:
+
+- Type of issue (e.g., deep link injection, state manipulation, etc.)
+- Full paths of source file(s) related to the manifestation of the issue
+- The location of the affected source code (tag/branch/commit or direct URL)
+- Any special configuration required to reproduce the issue
+- Step-by-step instructions to reproduce the issue
+- Proof-of-concept or exploit code (if possible)
+- Impact of the issue, including how an attacker might exploit it
 
 ### What to Expect
 
-- **Acknowledgment**: Within 48 hours
-- **Initial Assessment**: Within 7 days
-- **Resolution Timeline**: Depends on severity
-  - Critical: 24-48 hours
-  - High: 7 days
-  - Medium: 30 days
-  - Low: 90 days
-
-### Disclosure Policy
-
-- We follow responsible disclosure
-- Credit will be given to reporters (unless anonymity is requested)
-- Please allow reasonable time for fixes before public disclosure
+- A confirmation of receipt within 48 hours
+- An assessment of the vulnerability within 7 days
+- Regular updates on our progress
+- Credit for responsible disclosure (if desired)
 
 ## Security Best Practices
 
-When using these templates:
+When using SwiftRouter in your projects:
 
-1. **Never commit secrets** - Use GitHub Secrets or environment variables
-2. **Use least privilege** - Grant only necessary permissions
-3. **Rotate credentials** - Regularly update API keys and certificates
-4. **Audit access** - Review who has repository access
-5. **Enable branch protection** - Require PR reviews for sensitive branches
-6. **Use Dependabot** - Keep dependencies updated
-7. **Review workflow changes** - PRs modifying workflows need extra scrutiny
+1. **Validate Deep Links** - Always validate URL parameters before navigation
+2. **Use Route Guards** - Implement authentication guards for protected routes
+3. **Sanitize Parameters** - Never trust user input from URL parameters
+4. **Audit Navigation Paths** - Review which screens are accessible via deep links
 
-## CI/CD Security Checklist
+## Security Features
 
-- [ ] All secrets stored in GitHub Secrets
-- [ ] No hardcoded credentials in workflows
-- [ ] Branch protection enabled on main
-- [ ] PR reviews required
-- [ ] CODEOWNERS file configured
-- [ ] Dependabot enabled
-- [ ] Workflow permissions minimized
+SwiftRouter includes several security considerations:
 
-## Contact
-
-For security concerns, contact the maintainer through GitHub.
-
----
-
-Thank you for helping keep this project secure! 🔒
+- **Type-Safe Parameters** - Reduces injection risks
+- **Route Guards** - Authentication/authorization interceptors
+- **URL Validation** - Built-in URL parsing with validation
+- **No External Dependencies** - Minimal attack surface

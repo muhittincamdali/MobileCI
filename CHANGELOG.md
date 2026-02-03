@@ -8,32 +8,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Kotlin Multiplatform workflow templates
+- visionOS navigation support
 
-## [1.0.0] - 2025-01-15
+## [1.0.0] - 2024-01-15
 
 ### Added
-- iOS CI/CD workflows (ci, release, beta, pr, nightly)
-- Flutter multi-platform workflows
-- React Native workflows with Expo EAS support
-- Fastlane configuration templates
-- Code signing setup (Match)
-- TestFlight deployment automation
-- App Store release automation
-- Google Play release automation
-- Firebase App Distribution support
-- Slack notification integration
-- Multi-platform caching actions
-- PR validation workflows
-- Version bump scripts
-- Changelog generation scripts
-- Comprehensive documentation
+- Type-safe navigation with compile-time checks
+- SwiftUI NavigationStack integration
+- Deep linking support with URL parsing
+- Tab bar coordination
+- Modal presentation handling
+- Navigation state persistence
+- Route parameters with type safety
+- Navigation interceptors (guards)
+- Animated transitions
+- Back stack management
+- Child router support (coordinator pattern)
 
-### Changed
-- Optimized cache hit rates for faster builds
+### Features
+- Zero dependencies
+- Protocol-oriented design
+- Full async/await support
 
-### Fixed
-- Xcode version selection edge cases
-
-[Unreleased]: https://github.com/muhittincamdali/MobileCI/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/muhittincamdali/MobileCI/releases/tag/v1.0.0
+[Unreleased]: https://github.com/muhittincamdali/SwiftRouter/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/muhittincamdali/SwiftRouter/releases/tag/v1.0.0
