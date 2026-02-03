@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Generate Release Notes
+        id: notes
+        run: |
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --pretty=format:"- %s" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+          body: |
+            ## What's Changed
+            ${{ steps.notes.outputs.notes }}
+            
+            ## Usage
+            
+            Copy the relevant workflow templates to your project:
+            
+            ```bash
+            # iOS
+            cp -r ios/workflows/* your-project/.github/workflows/
+            
+            # Flutter
+            cp -r flutter/workflows/* your-project/.github/workflows/
+            
+            # React Native
+            cp -r react-native/workflows/* your-project/.github/workflows/
+            ```
+            
+            See [documentation](docs/getting-started.md) for setup instructions.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
