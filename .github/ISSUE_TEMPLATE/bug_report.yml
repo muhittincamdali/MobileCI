@@ -1,0 +1,75 @@
+name: Bug Report
+description: Report a bug in CI/CD workflows
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! Please fill out the sections below.
+  
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: Which platform workflow is affected?
+      options:
+        - iOS
+        - Flutter
+        - React Native
+        - Shared/Actions
+        - Documentation
+    validations:
+      required: true
+  
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of the bug
+      placeholder: What happened?
+    validations:
+      required: true
+  
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Configure workflow with...
+        2. Push to branch...
+        3. See error
+    validations:
+      required: true
+  
+  - type: textarea
+    id: logs
+    attributes:
+      label: Workflow Logs
+      description: Relevant workflow run logs (redact secrets!)
+      render: shell
+      placeholder: Paste relevant logs here
+  
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Please provide environment details
+      value: |
+        - Runner: [e.g., macos-14, ubuntu-latest]
+        - Xcode: [e.g., 15.2]
+        - Flutter: [e.g., 3.16]
+        - Node: [e.g., 20]
+    validations:
+      required: true
+  
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues to avoid duplicates
+          required: true
+        - label: I have redacted all secrets/credentials from logs
+          required: true
