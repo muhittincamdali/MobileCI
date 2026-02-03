@@ -1,0 +1,367 @@
+# React Native CI Workflow
+# Build, test, and analyze React Native applications
+# Version: 2.0.0
+
+name: React Native CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'release/**'
+    paths:
+      - '**.js'
+      - '**.jsx'
+      - '**.ts'
+      - '**.tsx'
+      - 'package.json'
+      - 'yarn.lock'
+      - 'package-lock.json'
+      - 'ios/**'
+      - 'android/**'
+      - '.github/workflows/react-native-ci.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+concurrency:
+  group: rn-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  JAVA_VERSION: '17'
+  RUBY_VERSION: '3.2'
+  XCODE_VERSION: '15.2'
+
+jobs:
+  # ===========================================================================
+  # INSTALL & LINT
+  # ===========================================================================
+  lint:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+      
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      
+      - name: Run ESLint
+        run: yarn lint --format github
+      
+      - name: Run TypeScript check
+        run: yarn tsc --noEmit
+      
+      - name: Run Prettier check
+        run: yarn prettier --check "**/*.{js,jsx,ts,tsx,json}"
+      
+      - name: Check for circular dependencies
+        run: |
+          if command -v madge &> /dev/null; then
+            yarn madge --circular --extensions ts,tsx src/
+          else
+            echo "madge not installed, skipping circular dependency check"
+          fi
+
+  # ===========================================================================
+  # UNIT TESTS
+  # ===========================================================================
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    timeout-minutes: 20
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+      
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      
+      - name: Run tests
+        run: yarn test --coverage --ci --reporters=default --reporters=jest-junit
+        env:
+          JEST_JUNIT_OUTPUT_DIR: ./test-results
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/lcov.info
+          fail_ci_if_error: false
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            test-results/
+            coverage/
+          retention-days: 7
+      
+      - name: Publish test report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Jest Test Results
+          path: test-results/junit.xml
+          reporter: jest-junit
+
+  # ===========================================================================
+  # BUILD ANDROID
+  # ===========================================================================
+  build-android:
+    name: Build Android
+    runs-on: ubuntu-latest
+    needs: test
+    timeout-minutes: 45
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'gradle'
+      
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      
+      - name: Build Android (Debug)
+        run: |
+          cd android
+          ./gradlew assembleDebug --no-daemon
+      
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-debug-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+          retention-days: 7
+
+  # ===========================================================================
+  # BUILD IOS
+  # ===========================================================================
+  build-ios:
+    name: Build iOS
+    runs-on: macos-14
+    needs: test
+    timeout-minutes: 60
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+      
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+          working-directory: ios
+      
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: |
+            ios/Pods
+            ~/Library/Caches/CocoaPods
+          key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+      
+      - name: Install CocoaPods
+        run: |
+          cd ios
+          bundle install
+          bundle exec pod install
+      
+      - name: Build iOS (Debug)
+        run: |
+          cd ios
+          xcodebuild build \
+            -workspace *.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            | xcpretty
+      
+      - name: Upload build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-debug-build
+          path: ios/build/Build/Products/Debug-iphonesimulator/*.app
+          retention-days: 7
+
+  # ===========================================================================
+  # E2E TESTS (Detox)
+  # ===========================================================================
+  e2e-ios:
+    name: E2E Tests (iOS)
+    runs-on: macos-14
+    needs: build-ios
+    if: github.event_name != 'pull_request'
+    timeout-minutes: 60
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+      
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      
+      - name: Install Detox CLI
+        run: |
+          brew tap wix/brew
+          brew install applesimutils
+          yarn global add detox-cli
+      
+      - name: Build for Detox
+        run: detox build --configuration ios.sim.debug
+      
+      - name: Run Detox tests
+        run: |
+          detox test --configuration ios.sim.debug --cleanup --headless || true
+      
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-artifacts
+          path: |
+            artifacts/
+            e2e/screenshots/
+          retention-days: 7
+
+  # ===========================================================================
+  # SECURITY SCAN
+  # ===========================================================================
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+      
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      
+      - name: Run npm audit
+        run: yarn audit --level high || true
+      
+      - name: Check for secrets
+        run: |
+          echo "Scanning for potential secrets..."
+          
+          PATTERNS=(
+            "api[_-]?key"
+            "secret[_-]?key"
+            "password"
+            "private[_-]?key"
+            "access[_-]?token"
+          )
+          
+          for pattern in "${PATTERNS[@]}"; do
+            MATCHES=$(grep -rni "$pattern\s*[:=]" --include="*.ts" --include="*.tsx" --include="*.js" . | grep -v "node_modules\|\.test\.\|\.spec\.\|Mock" || true)
+            if [ -n "$MATCHES" ]; then
+              echo "::warning::Potential secret pattern '$pattern' found"
+            fi
+          done
+
+  # ===========================================================================
+  # CI STATUS
+  # ===========================================================================
+  ci-status:
+    name: CI Status
+    runs-on: ubuntu-latest
+    needs: [lint, test, build-android, build-ios]
+    if: always()
+    
+    steps:
+      - name: Check status
+        run: |
+          if [ "${{ needs.lint.result }}" != "success" ]; then
+            echo "::error::Lint failed"
+            exit 1
+          fi
+          
+          if [ "${{ needs.test.result }}" != "success" ]; then
+            echo "::error::Tests failed"
+            exit 1
+          fi
+          
+          if [ "${{ needs.build-android.result }}" != "success" ]; then
+            echo "::error::Android build failed"
+            exit 1
+          fi
+          
+          echo "All CI checks passed!"

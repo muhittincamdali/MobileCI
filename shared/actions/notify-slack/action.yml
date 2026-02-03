@@ -1,0 +1,236 @@
+# Slack Notification Composite Action
+# Send formatted notifications to Slack
+# Version: 2.0.0
+
+name: 'Notify Slack'
+description: 'Send build/deployment notifications to Slack'
+
+inputs:
+  webhook-url:
+    description: 'Slack webhook URL'
+    required: true
+  
+  status:
+    description: 'Build status (success, failure, cancelled)'
+    required: true
+    default: 'success'
+  
+  title:
+    description: 'Notification title'
+    required: false
+    default: 'Build Notification'
+  
+  message:
+    description: 'Custom message to include'
+    required: false
+    default: ''
+  
+  platform:
+    description: 'Platform (ios, android, flutter, react-native)'
+    required: false
+    default: ''
+  
+  version:
+    description: 'App version'
+    required: false
+    default: ''
+  
+  build-number:
+    description: 'Build number'
+    required: false
+    default: ''
+  
+  environment:
+    description: 'Environment (development, staging, production)'
+    required: false
+    default: ''
+  
+  download-url:
+    description: 'URL to download the build'
+    required: false
+    default: ''
+  
+  mention-users:
+    description: 'Slack user IDs to mention (comma-separated)'
+    required: false
+    default: ''
+  
+  mention-channel:
+    description: 'Mention channel (@channel or @here)'
+    required: false
+    default: ''
+
+outputs:
+  response:
+    description: 'Slack API response'
+    value: ${{ steps.notify.outputs.response }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Prepare payload
+      id: payload
+      shell: bash
+      run: |
+        # Determine color based on status
+        case "${{ inputs.status }}" in
+          success)
+            COLOR="good"
+            EMOJI=":white_check_mark:"
+            STATUS_TEXT="Success"
+            ;;
+          failure)
+            COLOR="danger"
+            EMOJI=":x:"
+            STATUS_TEXT="Failed"
+            ;;
+          cancelled)
+            COLOR="warning"
+            EMOJI=":warning:"
+            STATUS_TEXT="Cancelled"
+            ;;
+          *)
+            COLOR="#808080"
+            EMOJI=":information_source:"
+            STATUS_TEXT="${{ inputs.status }}"
+            ;;
+        esac
+        
+        echo "color=$COLOR" >> $GITHUB_OUTPUT
+        echo "emoji=$EMOJI" >> $GITHUB_OUTPUT
+        echo "status_text=$STATUS_TEXT" >> $GITHUB_OUTPUT
+
+    - name: Build notification fields
+      id: fields
+      shell: bash
+      run: |
+        FIELDS='['
+        
+        # Add platform field
+        if [ -n "${{ inputs.platform }}" ]; then
+          FIELDS+='{
+            "title": "Platform",
+            "value": "${{ inputs.platform }}",
+            "short": true
+          },'
+        fi
+        
+        # Add version field
+        if [ -n "${{ inputs.version }}" ]; then
+          FIELDS+='{
+            "title": "Version",
+            "value": "${{ inputs.version }}",
+            "short": true
+          },'
+        fi
+        
+        # Add build number field
+        if [ -n "${{ inputs.build-number }}" ]; then
+          FIELDS+='{
+            "title": "Build",
+            "value": "${{ inputs.build-number }}",
+            "short": true
+          },'
+        fi
+        
+        # Add environment field
+        if [ -n "${{ inputs.environment }}" ]; then
+          FIELDS+='{
+            "title": "Environment",
+            "value": "${{ inputs.environment }}",
+            "short": true
+          },'
+        fi
+        
+        # Add branch field
+        FIELDS+='{
+          "title": "Branch",
+          "value": "${{ github.ref_name }}",
+          "short": true
+        },'
+        
+        # Add commit field
+        FIELDS+='{
+          "title": "Commit",
+          "value": "<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${GITHUB_SHA:0:7}>",
+          "short": true
+        }'
+        
+        FIELDS+=']'
+        
+        echo "fields=$FIELDS" >> $GITHUB_OUTPUT
+
+    - name: Send notification
+      id: notify
+      shell: bash
+      run: |
+        # Build mentions
+        MENTIONS=""
+        if [ -n "${{ inputs.mention-channel }}" ]; then
+          MENTIONS="${{ inputs.mention-channel }} "
+        fi
+        if [ -n "${{ inputs.mention-users }}" ]; then
+          IFS=',' read -ra USERS <<< "${{ inputs.mention-users }}"
+          for user in "${USERS[@]}"; do
+            MENTIONS+="<@$user> "
+          done
+        fi
+        
+        # Build actions
+        ACTIONS='[]'
+        if [ -n "${{ inputs.download-url }}" ]; then
+          ACTIONS='[{
+            "type": "button",
+            "text": "Download Build",
+            "url": "${{ inputs.download-url }}"
+          }]'
+        fi
+        
+        # Build message
+        MESSAGE="${MENTIONS}${{ inputs.message }}"
+        if [ -z "$MESSAGE" ]; then
+          MESSAGE="${{ inputs.title }} - ${{ steps.payload.outputs.status_text }}"
+        fi
+        
+        # Send to Slack
+        RESPONSE=$(curl -s -X POST "${{ inputs.webhook-url }}" \
+          -H "Content-Type: application/json" \
+          -d @- << EOF
+        {
+          "text": "${{ steps.payload.outputs.emoji }} ${{ inputs.title }}",
+          "attachments": [
+            {
+              "color": "${{ steps.payload.outputs.color }}",
+              "title": "${{ inputs.title }}",
+              "title_link": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+              "text": "$MESSAGE",
+              "fields": ${{ steps.fields.outputs.fields }},
+              "actions": $ACTIONS,
+              "footer": "${{ github.repository }}",
+              "footer_icon": "https://github.githubassets.com/favicon.ico",
+              "ts": $(date +%s)
+            }
+          ]
+        }
+        EOF
+        )
+        
+        echo "response=$RESPONSE" >> $GITHUB_OUTPUT
+        
+        if [ "$RESPONSE" != "ok" ]; then
+          echo "::warning::Slack notification may have failed: $RESPONSE"
+        fi
+
+    - name: Log notification
+      shell: bash
+      run: |
+        echo "### Slack Notification Sent" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status:** ${{ steps.payload.outputs.status_text }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Title:** ${{ inputs.title }}" >> $GITHUB_STEP_SUMMARY
+        if [ -n "${{ inputs.platform }}" ]; then
+          echo "- **Platform:** ${{ inputs.platform }}" >> $GITHUB_STEP_SUMMARY
+        fi
+        if [ -n "${{ inputs.version }}" ]; then
+          echo "- **Version:** ${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
+        fi

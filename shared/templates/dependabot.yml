@@ -1,0 +1,188 @@
+# Dependabot Configuration
+# Automated dependency updates for mobile projects
+# Version: 2.0.0
+#
+# Documentation: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+
+registries:
+  # Private npm registry (if applicable)
+  npm-private:
+    type: npm-registry
+    url: https://npm.pkg.github.com
+    token: ${{ secrets.NPM_TOKEN }}
+
+updates:
+  # ===========================================================================
+  # GITHUB ACTIONS
+  # ===========================================================================
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    open-pull-requests-limit: 5
+
+  # ===========================================================================
+  # NPM/YARN (JavaScript/TypeScript/React Native)
+  # ===========================================================================
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "09:00"
+      timezone: "UTC"
+    labels:
+      - "dependencies"
+      - "javascript"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    ignore:
+      # Ignore major version updates for React Native (breaking changes)
+      - dependency-name: "react-native"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+    groups:
+      react-native:
+        patterns:
+          - "react-native*"
+          - "@react-native*"
+      testing:
+        patterns:
+          - "jest*"
+          - "@testing-library/*"
+          - "detox"
+      linting:
+        patterns:
+          - "eslint*"
+          - "prettier*"
+          - "@typescript-eslint/*"
+      types:
+        patterns:
+          - "@types/*"
+    open-pull-requests-limit: 10
+    versioning-strategy: increase
+
+  # ===========================================================================
+  # COCOAPODS (iOS)
+  # ===========================================================================
+  - package-ecosystem: "bundler"
+    directory: "/ios"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "09:00"
+      timezone: "UTC"
+    labels:
+      - "dependencies"
+      - "ios"
+      - "ruby"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    open-pull-requests-limit: 5
+
+  # ===========================================================================
+  # GRADLE (Android)
+  # ===========================================================================
+  - package-ecosystem: "gradle"
+    directory: "/android"
+    schedule:
+      interval: "weekly"
+      day: "thursday"
+      time: "09:00"
+      timezone: "UTC"
+    labels:
+      - "dependencies"
+      - "android"
+      - "gradle"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    ignore:
+      # Ignore major AGP updates (requires manual migration)
+      - dependency-name: "com.android.tools.build:gradle"
+        update-types: ["version-update:semver-major"]
+    groups:
+      kotlin:
+        patterns:
+          - "org.jetbrains.kotlin*"
+      androidx:
+        patterns:
+          - "androidx.*"
+      firebase:
+        patterns:
+          - "com.google.firebase*"
+    open-pull-requests-limit: 5
+
+  # ===========================================================================
+  # PUB (Flutter/Dart)
+  # ===========================================================================
+  - package-ecosystem: "pub"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "friday"
+      time: "09:00"
+      timezone: "UTC"
+    labels:
+      - "dependencies"
+      - "flutter"
+      - "dart"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    ignore:
+      # Ignore Flutter SDK updates
+      - dependency-name: "flutter"
+        update-types: ["version-update:semver-major"]
+    groups:
+      bloc:
+        patterns:
+          - "bloc*"
+          - "flutter_bloc"
+      firebase:
+        patterns:
+          - "firebase_*"
+          - "cloud_*"
+      testing:
+        patterns:
+          - "test*"
+          - "mockito"
+          - "integration_test"
+    open-pull-requests-limit: 10
+
+  # ===========================================================================
+  # SWIFT PACKAGE MANAGER
+  # ===========================================================================
+  - package-ecosystem: "swift"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "10:00"
+      timezone: "UTC"
+    labels:
+      - "dependencies"
+      - "ios"
+      - "swift"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    open-pull-requests-limit: 5

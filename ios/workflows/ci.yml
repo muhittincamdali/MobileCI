@@ -1,0 +1,471 @@
+# iOS CI Workflow
+# Build, test, and validate iOS applications
+# Version: 2.0.0
+
+name: iOS CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'release/**'
+    paths:
+      - '**.swift'
+      - '**.m'
+      - '**.h'
+      - '**.xib'
+      - '**.storyboard'
+      - 'Podfile*'
+      - 'Package.swift'
+      - '.github/workflows/ios-ci.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+    inputs:
+      clean_build:
+        description: 'Perform clean build'
+        required: false
+        default: 'false'
+        type: boolean
+      run_ui_tests:
+        description: 'Run UI tests'
+        required: false
+        default: 'true'
+        type: boolean
+
+# Ensure only one workflow runs at a time per branch
+concurrency:
+  group: ios-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  WORKSPACE_NAME: App.xcworkspace
+  SCHEME_NAME: App
+  XCODE_VERSION: '15.2'
+  SIMULATOR_DEVICE: 'iPhone 15 Pro'
+  SIMULATOR_OS: '17.2'
+  RUBY_VERSION: '3.2'
+  BUNDLER_VERSION: '2.4.0'
+  COCOAPODS_VERSION: '1.14.0'
+  COVERAGE_THRESHOLD: '70'
+
+jobs:
+  # ===========================================================================
+  # BUILD JOB
+  # ===========================================================================
+  build:
+    name: Build
+    runs-on: macos-14
+    timeout-minutes: 45
+    
+    outputs:
+      build_number: ${{ steps.build_info.outputs.build_number }}
+      version_number: ${{ steps.build_info.outputs.version_number }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+      
+      - name: Select Xcode version
+        run: |
+          sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
+          xcodebuild -version
+          swift --version
+      
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+      
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: |
+            Pods
+            ~/.cocoapods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+      
+      - name: Cache Swift Package Manager
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build
+            ~/Library/Developer/Xcode/DerivedData/**/SourcePackages
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+      
+      - name: Cache Derived Data
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-derived-${{ hashFiles('**/*.xcodeproj/project.pbxproj') }}
+          restore-keys: |
+            ${{ runner.os }}-derived-
+      
+      - name: Install dependencies
+        run: |
+          bundle install --jobs 4 --retry 3
+          bundle exec pod install --repo-update
+      
+      - name: Get build info
+        id: build_info
+        run: |
+          BUILD_NUMBER=${{ github.run_number }}
+          VERSION=$(agvtool what-marketing-version -terse1 2>/dev/null || echo "1.0.0")
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+          echo "version_number=$VERSION" >> $GITHUB_OUTPUT
+          echo "Build: $VERSION ($BUILD_NUMBER)"
+      
+      - name: Build for testing
+        run: |
+          set -o pipefail
+          
+          CLEAN_FLAG=""
+          if [ "${{ inputs.clean_build }}" == "true" ]; then
+            CLEAN_FLAG="clean"
+          fi
+          
+          xcodebuild $CLEAN_FLAG build-for-testing \
+            -workspace "${{ env.WORKSPACE_NAME }}" \
+            -scheme "${{ env.SCHEME_NAME }}" \
+            -destination "platform=iOS Simulator,name=${{ env.SIMULATOR_DEVICE }},OS=${{ env.SIMULATOR_OS }}" \
+            -configuration Debug \
+            -derivedDataPath ./DerivedData \
+            -enableCodeCoverage YES \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            | xcpretty --color --report junit --output ./build-results.xml
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            DerivedData/Build/Products
+          retention-days: 3
+      
+      - name: Upload build report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-report
+          path: build-results.xml
+          retention-days: 7
+
+  # ===========================================================================
+  # UNIT TESTS JOB
+  # ===========================================================================
+  unit-tests:
+    name: Unit Tests
+    runs-on: macos-14
+    needs: build
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
+      
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+      
+      - name: Restore CocoaPods cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            Pods
+            ~/.cocoapods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: DerivedData/Build/Products
+      
+      - name: Install dependencies
+        run: |
+          bundle install --jobs 4 --retry 3
+          bundle exec pod install
+      
+      - name: Boot simulator
+        run: |
+          DEVICE_ID=$(xcrun simctl list devices available | grep "${{ env.SIMULATOR_DEVICE }}" | grep -oE '[A-Z0-9-]{36}' | head -1)
+          if [ -n "$DEVICE_ID" ]; then
+            xcrun simctl boot "$DEVICE_ID" || true
+          fi
+      
+      - name: Run unit tests
+        run: |
+          set -o pipefail
+          
+          xcodebuild test-without-building \
+            -workspace "${{ env.WORKSPACE_NAME }}" \
+            -scheme "${{ env.SCHEME_NAME }}" \
+            -destination "platform=iOS Simulator,name=${{ env.SIMULATOR_DEVICE }},OS=${{ env.SIMULATOR_OS }}" \
+            -derivedDataPath ./DerivedData \
+            -enableCodeCoverage YES \
+            -resultBundlePath ./TestResults.xcresult \
+            -parallel-testing-enabled YES \
+            -test-iterations 2 \
+            -retry-tests-on-failure \
+            | xcpretty --color --report junit --output ./test-results.xml
+      
+      - name: Generate coverage report
+        run: |
+          xcrun xccov view --report --json ./TestResults.xcresult > coverage.json
+          
+          # Calculate coverage percentage
+          COVERAGE=$(cat coverage.json | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          targets = data.get('targets', [])
+          for t in targets:
+            if '${{ env.SCHEME_NAME }}' in t.get('name', ''):
+              print(f\"{t.get('lineCoverage', 0) * 100:.2f}\")
+              break
+          ")
+          
+          echo "Code coverage: ${COVERAGE}%"
+          echo "COVERAGE_PERCENT=$COVERAGE" >> $GITHUB_ENV
+          
+          # Check threshold
+          if (( $(echo "$COVERAGE < ${{ env.COVERAGE_THRESHOLD }}" | bc -l) )); then
+            echo "::warning::Code coverage ($COVERAGE%) is below threshold (${{ env.COVERAGE_THRESHOLD }}%)"
+          fi
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-test-results
+          path: |
+            test-results.xml
+            TestResults.xcresult
+            coverage.json
+          retention-days: 14
+      
+      - name: Publish test report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Unit Test Report
+          path: test-results.xml
+          reporter: java-junit
+          fail-on-error: true
+
+  # ===========================================================================
+  # UI TESTS JOB
+  # ===========================================================================
+  ui-tests:
+    name: UI Tests
+    runs-on: macos-14
+    needs: build
+    if: ${{ inputs.run_ui_tests != 'false' }}
+    timeout-minutes: 60
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        device:
+          - 'iPhone 15 Pro'
+          - 'iPad Pro (12.9-inch) (6th generation)'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
+      
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+      
+      - name: Restore CocoaPods cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            Pods
+            ~/.cocoapods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+      
+      - name: Install dependencies
+        run: |
+          bundle install --jobs 4 --retry 3
+          bundle exec pod install
+      
+      - name: Boot simulator
+        run: |
+          DEVICE_ID=$(xcrun simctl list devices available | grep "${{ matrix.device }}" | grep -oE '[A-Z0-9-]{36}' | head -1)
+          if [ -n "$DEVICE_ID" ]; then
+            xcrun simctl boot "$DEVICE_ID" || true
+            xcrun simctl status_bar "$DEVICE_ID" override \
+              --time "9:41" \
+              --batteryState charged \
+              --batteryLevel 100
+          fi
+      
+      - name: Run UI tests
+        run: |
+          set -o pipefail
+          
+          xcodebuild test \
+            -workspace "${{ env.WORKSPACE_NAME }}" \
+            -scheme "${{ env.SCHEME_NAME }}UITests" \
+            -destination "platform=iOS Simulator,name=${{ matrix.device }},OS=${{ env.SIMULATOR_OS }}" \
+            -configuration Debug \
+            -resultBundlePath "./UITestResults-${{ matrix.device }}.xcresult" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            | xcpretty --color --report junit --output "./ui-test-results-${{ matrix.device }}.xml"
+      
+      - name: Capture failure screenshots
+        if: failure()
+        run: |
+          mkdir -p ./failure-screenshots
+          DEVICE_ID=$(xcrun simctl list devices booted | grep -oE '[A-Z0-9-]{36}' | head -1)
+          if [ -n "$DEVICE_ID" ]; then
+            xcrun simctl io "$DEVICE_ID" screenshot "./failure-screenshots/failure-${{ matrix.device }}.png"
+          fi
+      
+      - name: Upload UI test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ui-test-results-${{ matrix.device }}
+          path: |
+            ui-test-results-*.xml
+            UITestResults-*.xcresult
+            failure-screenshots
+          retention-days: 14
+
+  # ===========================================================================
+  # LINT & ANALYSIS JOB
+  # ===========================================================================
+  lint:
+    name: Lint & Analysis
+    runs-on: macos-14
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Install SwiftLint
+        run: brew install swiftlint
+      
+      - name: Run SwiftLint
+        run: |
+          swiftlint lint --reporter github-actions-logging --strict
+      
+      - name: Run SwiftFormat check
+        run: |
+          brew install swiftformat
+          swiftformat --lint . || echo "::warning::SwiftFormat found formatting issues"
+      
+      - name: Check for TODOs and FIXMEs
+        run: |
+          echo "Checking for TODO and FIXME comments..."
+          TODOS=$(grep -rn "TODO\|FIXME" --include="*.swift" . || true)
+          if [ -n "$TODOS" ]; then
+            echo "::notice::Found TODO/FIXME comments:"
+            echo "$TODOS"
+          fi
+
+  # ===========================================================================
+  # SECURITY SCAN JOB
+  # ===========================================================================
+  security:
+    name: Security Scan
+    runs-on: macos-14
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Check for hardcoded secrets
+        run: |
+          echo "Scanning for potential secrets..."
+          
+          # Check for common patterns
+          PATTERNS=(
+            "api[_-]?key"
+            "secret[_-]?key"
+            "password"
+            "private[_-]?key"
+            "access[_-]?token"
+          )
+          
+          FOUND=0
+          for pattern in "${PATTERNS[@]}"; do
+            MATCHES=$(grep -rni "$pattern\s*[:=]" --include="*.swift" --include="*.plist" . | grep -v "\.example\|Test\|Mock" || true)
+            if [ -n "$MATCHES" ]; then
+              echo "::warning::Potential hardcoded secret pattern '$pattern' found"
+              echo "$MATCHES"
+              FOUND=1
+            fi
+          done
+          
+          if [ $FOUND -eq 1 ]; then
+            echo "::warning::Review the above matches for potential security issues"
+          fi
+      
+      - name: Check dependency vulnerabilities
+        run: |
+          if [ -f "Podfile.lock" ]; then
+            echo "Checking CocoaPods dependencies..."
+            # Add vulnerability scanning tool here if available
+          fi
+          
+          if [ -f "Package.resolved" ]; then
+            echo "Checking Swift Package dependencies..."
+            # Add vulnerability scanning tool here if available
+          fi
+
+  # ===========================================================================
+  # FINAL STATUS CHECK
+  # ===========================================================================
+  ci-status:
+    name: CI Status
+    runs-on: ubuntu-latest
+    needs: [build, unit-tests, lint]
+    if: always()
+    
+    steps:
+      - name: Check CI Status
+        run: |
+          if [ "${{ needs.build.result }}" != "success" ]; then
+            echo "Build failed"
+            exit 1
+          fi
+          
+          if [ "${{ needs.unit-tests.result }}" != "success" ]; then
+            echo "Unit tests failed"
+            exit 1
+          fi
+          
+          if [ "${{ needs.lint.result }}" != "success" ]; then
+            echo "Lint failed"
+            exit 1
+          fi
+          
+          echo "All CI checks passed!"

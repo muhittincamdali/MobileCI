@@ -1,0 +1,464 @@
+# iOS TestFlight Beta Workflow
+# Deploy beta builds to TestFlight for internal and external testing
+# Version: 2.0.0
+
+name: iOS TestFlight Beta
+
+on:
+  push:
+    branches:
+      - develop
+      - 'release/**'
+    paths:
+      - '**.swift'
+      - '**.m'
+      - '**.h'
+      - 'Podfile*'
+      - 'Package.swift'
+  workflow_dispatch:
+    inputs:
+      distribute_external:
+        description: 'Distribute to external testers'
+        required: false
+        default: 'false'
+        type: boolean
+      changelog:
+        description: 'Release notes for testers'
+        required: false
+        type: string
+      groups:
+        description: 'TestFlight groups (comma-separated)'
+        required: false
+        default: 'Internal Testers'
+        type: string
+
+concurrency:
+  group: ios-beta-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  WORKSPACE_NAME: App.xcworkspace
+  SCHEME_NAME: App
+  XCODE_VERSION: '15.2'
+  RUBY_VERSION: '3.2'
+
+jobs:
+  # ===========================================================================
+  # BUILD BETA
+  # ===========================================================================
+  build:
+    name: Build Beta
+    runs-on: macos-14
+    timeout-minutes: 60
+    
+    outputs:
+      version: ${{ steps.info.outputs.version }}
+      build_number: ${{ steps.info.outputs.build_number }}
+      changelog: ${{ steps.changelog.outputs.notes }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+      
+      - name: Select Xcode version
+        run: |
+          sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
+          xcodebuild -version
+      
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+      
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: |
+            Pods
+            ~/.cocoapods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+      
+      - name: Install dependencies
+        run: |
+          bundle install --jobs 4 --retry 3
+          bundle exec pod install --repo-update
+      
+      - name: Get version info
+        id: info
+        run: |
+          VERSION=$(agvtool what-marketing-version -terse1 2>/dev/null || echo "1.0.0")
+          BUILD_NUMBER=${{ github.run_number }}
+          
+          # Update build number
+          agvtool new-version -all "$BUILD_NUMBER"
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+          echo "Building version $VERSION ($BUILD_NUMBER)"
+      
+      - name: Generate changelog
+        id: changelog
+        run: |
+          if [ -n "${{ inputs.changelog }}" ]; then
+            NOTES="${{ inputs.changelog }}"
+          else
+            # Generate from recent commits
+            NOTES=$(git log --pretty=format:"• %s" -10 --no-merges | head -c 4000)
+            
+            if [ -z "$NOTES" ]; then
+              NOTES="Bug fixes and improvements"
+            fi
+          fi
+          
+          # Escape for GitHub output
+          NOTES="${NOTES//'%'/'%25'}"
+          NOTES="${NOTES//$'\n'/'%0A'}"
+          NOTES="${NOTES//$'\r'/'%0D'}"
+          
+          echo "notes=$NOTES" >> $GITHUB_OUTPUT
+      
+      - name: Setup code signing
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_TOKEN }}
+        run: |
+          # Create keychain
+          KEYCHAIN_PATH=$RUNNER_TEMP/signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+          
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain
+          
+          # Sync certificates
+          bundle exec fastlane match appstore \
+            --readonly true \
+            --keychain_name "$KEYCHAIN_PATH" \
+            --keychain_password "$KEYCHAIN_PASSWORD"
+      
+      - name: Build archive
+        env:
+          TEAM_ID: ${{ secrets.TEAM_ID }}
+        run: |
+          set -o pipefail
+          
+          xcodebuild -workspace "${{ env.WORKSPACE_NAME }}" \
+            -scheme "${{ env.SCHEME_NAME }}" \
+            -configuration Release \
+            -archivePath ./build/App.xcarchive \
+            clean archive \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM="${{ secrets.TEAM_ID }}" \
+            | xcpretty --color
+      
+      - name: Export IPA
+        run: |
+          cat > ./build/ExportOptions.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>${{ secrets.TEAM_ID }}</string>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>destination</key>
+            <string>upload</string>
+          </dict>
+          </plist>
+          EOF
+          
+          xcodebuild -exportArchive \
+            -archivePath ./build/App.xcarchive \
+            -exportOptionsPlist ./build/ExportOptions.plist \
+            -exportPath ./build/Beta \
+            | xcpretty --color
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: beta-build
+          path: |
+            build/Beta/*.ipa
+            build/App.xcarchive/dSYMs
+          retention-days: 14
+
+  # ===========================================================================
+  # RUN SMOKE TESTS
+  # ===========================================================================
+  test:
+    name: Smoke Tests
+    runs-on: macos-14
+    needs: build
+    timeout-minutes: 20
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
+      
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+      
+      - name: Restore CocoaPods cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            Pods
+            ~/.cocoapods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+      
+      - name: Install dependencies
+        run: |
+          bundle install --jobs 4 --retry 3
+          bundle exec pod install
+      
+      - name: Run smoke tests
+        run: |
+          set -o pipefail
+          
+          xcodebuild test \
+            -workspace "${{ env.WORKSPACE_NAME }}" \
+            -scheme "${{ env.SCHEME_NAME }}" \
+            -destination "platform=iOS Simulator,name=iPhone 15 Pro,OS=17.2" \
+            -testPlan SmokeTests \
+            -resultBundlePath ./SmokeTestResults.xcresult \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            | xcpretty --color || exit 1
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-test-results
+          path: SmokeTestResults.xcresult
+          retention-days: 7
+
+  # ===========================================================================
+  # UPLOAD TO TESTFLIGHT
+  # ===========================================================================
+  upload:
+    name: Upload to TestFlight
+    runs-on: macos-14
+    needs: [build, test]
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+      
+      - name: Install dependencies
+        run: bundle install --jobs 4 --retry 3
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: beta-build
+          path: build
+      
+      - name: Upload to TestFlight
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+        run: |
+          # Create API key file
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$APP_STORE_CONNECT_API_KEY_CONTENT" | base64 --decode > ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8
+          
+          IPA_FILE=$(ls build/*.ipa | head -1)
+          
+          xcrun altool --upload-app \
+            --file "$IPA_FILE" \
+            --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
+            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" \
+            --type ios
+          
+          echo "Successfully uploaded to TestFlight!"
+
+  # ===========================================================================
+  # DISTRIBUTE TO TESTERS
+  # ===========================================================================
+  distribute:
+    name: Distribute to Testers
+    runs-on: macos-14
+    needs: [build, upload]
+    timeout-minutes: 20
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+      
+      - name: Install dependencies
+        run: bundle install --jobs 4 --retry 3
+      
+      - name: Wait for build processing
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+        run: |
+          echo "Waiting for build processing (this may take 15-30 minutes)..."
+          
+          bundle exec fastlane run wait_for_testflight_build \
+            build_number:"${{ needs.build.outputs.build_number }}" \
+            initial_wait_interval:60 \
+            timeout:1800
+      
+      - name: Distribute to groups
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+        run: |
+          GROUPS="${{ inputs.groups }}"
+          if [ -z "$GROUPS" ]; then
+            GROUPS="Internal Testers"
+          fi
+          
+          EXTERNAL="${{ inputs.distribute_external }}"
+          if [ "$EXTERNAL" == "true" ]; then
+            DISTRIBUTE_EXTERNAL="true"
+          else
+            DISTRIBUTE_EXTERNAL="false"
+          fi
+          
+          bundle exec fastlane pilot distribute \
+            build_number:"${{ needs.build.outputs.build_number }}" \
+            changelog:"${{ needs.build.outputs.changelog }}" \
+            groups:"$GROUPS" \
+            distribute_external:$DISTRIBUTE_EXTERNAL \
+            notify_external_testers:$DISTRIBUTE_EXTERNAL \
+            reject_build_waiting_for_review:true
+
+  # ===========================================================================
+  # POST-BETA TASKS
+  # ===========================================================================
+  post-beta:
+    name: Post-Beta Tasks
+    runs-on: ubuntu-latest
+    needs: [build, distribute]
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Create beta tag
+        run: |
+          VERSION="${{ needs.build.outputs.version }}"
+          BUILD="${{ needs.build.outputs.build_number }}"
+          TAG="beta/${VERSION}/${BUILD}"
+          
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          
+          git tag -a "$TAG" -m "TestFlight beta $VERSION ($BUILD)"
+          git push origin "$TAG"
+      
+      - name: Notify Slack
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "New TestFlight build available!",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "TestFlight Beta Released"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Version:*\n${{ needs.build.outputs.version }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Build:*\n${{ needs.build.outputs.build_number }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Branch:*\n${{ github.ref_name }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Groups:*\n${{ inputs.groups || 'Internal Testers' }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*What's New:*\n${{ needs.build.outputs.changelog }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ===========================================================================
+  # UPLOAD DSYMS
+  # ===========================================================================
+  upload-dsyms:
+    name: Upload dSYMs
+    runs-on: macos-14
+    needs: [build, upload]
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: beta-build
+          path: build
+      
+      - name: Upload to Crashlytics
+        if: ${{ secrets.FIREBASE_APP_ID != '' }}
+        run: |
+          curl -sL https://firebase.tools | bash
+          
+          if [ -d "build/dSYMs" ]; then
+            firebase crashlytics:symbols:upload \
+              --app="${{ secrets.FIREBASE_APP_ID }}" \
+              build/dSYMs
+          fi
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}

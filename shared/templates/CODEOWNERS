@@ -1,0 +1,114 @@
+# CODEOWNERS - Define code ownership for pull request reviews
+# Version: 2.0.0
+#
+# Each line is a file pattern followed by one or more owners.
+# Order is important; the last matching pattern takes precedence.
+#
+# Documentation: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# ==============================================================================
+# DEFAULT OWNERS
+# ==============================================================================
+
+# These owners will be requested for review on any file change
+*                                   @mobile-team
+
+# ==============================================================================
+# PLATFORM-SPECIFIC OWNERS
+# ==============================================================================
+
+# iOS Platform
+/ios/                               @ios-team
+*.swift                             @ios-team
+*.m                                 @ios-team
+*.h                                 @ios-team
+Podfile                             @ios-team
+Podfile.lock                        @ios-team
+*.xcodeproj/                        @ios-team
+*.xcworkspace/                      @ios-team
+
+# Android Platform
+/android/                           @android-team
+*.kt                                @android-team
+*.java                              @android-team
+*.gradle                            @android-team
+*.gradle.kts                        @android-team
+
+# Flutter Platform
+/lib/                               @flutter-team
+pubspec.yaml                        @flutter-team
+pubspec.lock                        @flutter-team
+*.dart                              @flutter-team
+
+# React Native
+*.tsx                               @react-native-team
+*.ts                                @react-native-team
+*.jsx                               @react-native-team
+*.js                                @react-native-team
+package.json                        @react-native-team
+
+# ==============================================================================
+# CI/CD AND INFRASTRUCTURE
+# ==============================================================================
+
+# GitHub Actions workflows
+/.github/workflows/                 @devops-team @mobile-leads
+/.github/actions/                   @devops-team
+
+# Fastlane configuration
+/fastlane/                          @devops-team @mobile-leads
+
+# Build scripts
+/scripts/                           @devops-team
+
+# ==============================================================================
+# SECURITY-SENSITIVE FILES
+# ==============================================================================
+
+# Require security team review for sensitive changes
+.env*                               @security-team @mobile-leads
+**/secrets/                         @security-team
+**/certificates/                    @security-team
+**/keystore*                        @security-team
+google-services.json                @security-team @android-team
+GoogleService-Info.plist            @security-team @ios-team
+
+# ==============================================================================
+# DOCUMENTATION
+# ==============================================================================
+
+# Documentation changes
+/docs/                              @docs-team
+*.md                                @docs-team @mobile-team
+README.md                           @mobile-leads
+
+# ==============================================================================
+# CONFIGURATION FILES
+# ==============================================================================
+
+# Linting and formatting
+.eslintrc*                          @mobile-leads
+.prettierrc*                        @mobile-leads
+.swiftlint.yml                      @ios-team
+analysis_options.yaml               @flutter-team
+
+# Dependencies
+yarn.lock                           @mobile-leads
+package-lock.json                   @mobile-leads
+
+# ==============================================================================
+# NOTES
+# ==============================================================================
+#
+# Team definitions (create in GitHub Organization Settings):
+#   @mobile-team        - All mobile developers
+#   @ios-team           - iOS developers
+#   @android-team       - Android developers
+#   @flutter-team       - Flutter developers
+#   @react-native-team  - React Native developers
+#   @devops-team        - DevOps engineers
+#   @security-team      - Security team
+#   @docs-team          - Documentation team
+#   @mobile-leads       - Mobile team leads
+#
+# Individual users can also be specified: @username

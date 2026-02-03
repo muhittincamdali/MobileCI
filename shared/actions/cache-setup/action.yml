@@ -1,0 +1,197 @@
+# Cache Setup Composite Action
+# Configures caching for mobile CI/CD pipelines
+# Version: 2.0.0
+
+name: 'Cache Setup'
+description: 'Setup caching for mobile builds (Node, CocoaPods, Gradle, Flutter, etc.)'
+
+inputs:
+  platform:
+    description: 'Platform to cache for (ios, android, flutter, react-native, all)'
+    required: true
+    default: 'all'
+  
+  node-version:
+    description: 'Node.js version for npm/yarn cache'
+    required: false
+    default: '20'
+  
+  java-version:
+    description: 'Java version for Gradle cache'
+    required: false
+    default: '17'
+  
+  flutter-version:
+    description: 'Flutter version'
+    required: false
+    default: 'stable'
+  
+  ruby-version:
+    description: 'Ruby version for CocoaPods'
+    required: false
+    default: '3.2'
+  
+  working-directory:
+    description: 'Working directory for the project'
+    required: false
+    default: '.'
+  
+  cache-key-prefix:
+    description: 'Prefix for cache keys'
+    required: false
+    default: ''
+
+outputs:
+  cache-hit:
+    description: 'Whether there was a cache hit'
+    value: ${{ steps.cache-summary.outputs.hit }}
+
+runs:
+  using: 'composite'
+  steps:
+    # =========================================================================
+    # NODE/NPM/YARN CACHE
+    # =========================================================================
+    - name: Get yarn cache directory
+      if: contains(inputs.platform, 'react-native') || inputs.platform == 'all'
+      id: yarn-cache-dir
+      shell: bash
+      run: |
+        if command -v yarn &> /dev/null; then
+          echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Cache Node modules
+      if: contains(inputs.platform, 'react-native') || inputs.platform == 'all'
+      uses: actions/cache@v4
+      id: node-cache
+      with:
+        path: |
+          ${{ inputs.working-directory }}/node_modules
+          ${{ steps.yarn-cache-dir.outputs.dir }}
+          ~/.npm
+        key: ${{ inputs.cache-key-prefix }}node-${{ runner.os }}-${{ hashFiles('**/yarn.lock', '**/package-lock.json') }}
+        restore-keys: |
+          ${{ inputs.cache-key-prefix }}node-${{ runner.os }}-
+
+    # =========================================================================
+    # COCOAPODS CACHE (iOS)
+    # =========================================================================
+    - name: Cache CocoaPods
+      if: contains(inputs.platform, 'ios') || inputs.platform == 'all'
+      uses: actions/cache@v4
+      id: pods-cache
+      with:
+        path: |
+          ${{ inputs.working-directory }}/ios/Pods
+          ${{ inputs.working-directory }}/Pods
+          ~/Library/Caches/CocoaPods
+          ~/.cocoapods
+        key: ${{ inputs.cache-key-prefix }}pods-${{ runner.os }}-${{ hashFiles('**/Podfile.lock') }}
+        restore-keys: |
+          ${{ inputs.cache-key-prefix }}pods-${{ runner.os }}-
+
+    # =========================================================================
+    # GRADLE CACHE (Android)
+    # =========================================================================
+    - name: Cache Gradle
+      if: contains(inputs.platform, 'android') || inputs.platform == 'all'
+      uses: actions/cache@v4
+      id: gradle-cache
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+          ${{ inputs.working-directory }}/android/.gradle
+        key: ${{ inputs.cache-key-prefix }}gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ inputs.cache-key-prefix }}gradle-${{ runner.os }}-
+
+    # =========================================================================
+    # FLUTTER/PUB CACHE
+    # =========================================================================
+    - name: Cache Flutter
+      if: contains(inputs.platform, 'flutter') || inputs.platform == 'all'
+      uses: actions/cache@v4
+      id: flutter-cache
+      with:
+        path: |
+          ~/.pub-cache
+          ${{ inputs.working-directory }}/.dart_tool
+          ${{ inputs.working-directory }}/build
+        key: ${{ inputs.cache-key-prefix }}flutter-${{ runner.os }}-${{ inputs.flutter-version }}-${{ hashFiles('**/pubspec.lock') }}
+        restore-keys: |
+          ${{ inputs.cache-key-prefix }}flutter-${{ runner.os }}-${{ inputs.flutter-version }}-
+
+    # =========================================================================
+    # XCODE DERIVED DATA CACHE
+    # =========================================================================
+    - name: Cache Xcode Derived Data
+      if: (contains(inputs.platform, 'ios') || inputs.platform == 'all') && runner.os == 'macOS'
+      uses: actions/cache@v4
+      id: derived-data-cache
+      with:
+        path: |
+          ~/Library/Developer/Xcode/DerivedData
+        key: ${{ inputs.cache-key-prefix }}xcode-derived-${{ runner.os }}-${{ hashFiles('**/*.xcodeproj/project.pbxproj', '**/Podfile.lock') }}
+        restore-keys: |
+          ${{ inputs.cache-key-prefix }}xcode-derived-${{ runner.os }}-
+
+    # =========================================================================
+    # BUNDLER/RUBY CACHE
+    # =========================================================================
+    - name: Cache Bundler
+      if: (contains(inputs.platform, 'ios') || inputs.platform == 'all') && runner.os == 'macOS'
+      uses: actions/cache@v4
+      id: bundler-cache
+      with:
+        path: |
+          ${{ inputs.working-directory }}/ios/vendor/bundle
+          ${{ inputs.working-directory }}/vendor/bundle
+        key: ${{ inputs.cache-key-prefix }}bundler-${{ runner.os }}-${{ hashFiles('**/Gemfile.lock') }}
+        restore-keys: |
+          ${{ inputs.cache-key-prefix }}bundler-${{ runner.os }}-
+
+    # =========================================================================
+    # SUMMARY
+    # =========================================================================
+    - name: Cache summary
+      id: cache-summary
+      shell: bash
+      run: |
+        echo "### Cache Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Cache | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+        
+        HIT="false"
+        
+        if [ "${{ steps.node-cache.outputs.cache-hit }}" == "true" ]; then
+          echo "| Node modules | Hit |" >> $GITHUB_STEP_SUMMARY
+          HIT="true"
+        elif [ -n "${{ steps.node-cache.outputs.cache-hit }}" ]; then
+          echo "| Node modules | Miss |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ steps.pods-cache.outputs.cache-hit }}" == "true" ]; then
+          echo "| CocoaPods | Hit |" >> $GITHUB_STEP_SUMMARY
+          HIT="true"
+        elif [ -n "${{ steps.pods-cache.outputs.cache-hit }}" ]; then
+          echo "| CocoaPods | Miss |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ steps.gradle-cache.outputs.cache-hit }}" == "true" ]; then
+          echo "| Gradle | Hit |" >> $GITHUB_STEP_SUMMARY
+          HIT="true"
+        elif [ -n "${{ steps.gradle-cache.outputs.cache-hit }}" ]; then
+          echo "| Gradle | Miss |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ steps.flutter-cache.outputs.cache-hit }}" == "true" ]; then
+          echo "| Flutter/Pub | Hit |" >> $GITHUB_STEP_SUMMARY
+          HIT="true"
+        elif [ -n "${{ steps.flutter-cache.outputs.cache-hit }}" ]; then
+          echo "| Flutter/Pub | Miss |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "hit=$HIT" >> $GITHUB_OUTPUT

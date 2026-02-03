@@ -1,0 +1,118 @@
+# Matchfile - Code Signing Configuration
+# This file configures match for managing code signing certificates and profiles
+# Version: 2.0.0
+
+# ============================================================================
+# STORAGE CONFIGURATION
+# ============================================================================
+
+# Git repository for storing certificates and profiles
+# This should be a private repository with limited access
+git_url(ENV['MATCH_GIT_URL'] || 'git@github.com:company/certificates.git')
+
+# Branch to use for certificates (allows different branches per environment)
+git_branch(ENV['MATCH_GIT_BRANCH'] || 'main')
+
+# Storage mode: git, google_cloud, s3, or gitlab_secure_files
+storage_mode(ENV['MATCH_STORAGE_MODE'] || 'git')
+
+# ============================================================================
+# S3 STORAGE (Alternative)
+# ============================================================================
+
+# Uncomment to use S3 instead of Git
+# storage_mode('s3')
+# s3_region(ENV['MATCH_S3_REGION'] || 'us-east-1')
+# s3_bucket(ENV['MATCH_S3_BUCKET'] || 'company-certificates')
+# s3_access_key(ENV['MATCH_S3_ACCESS_KEY'])
+# s3_secret_access_key(ENV['MATCH_S3_SECRET_KEY'])
+
+# ============================================================================
+# GOOGLE CLOUD STORAGE (Alternative)
+# ============================================================================
+
+# Uncomment to use Google Cloud Storage
+# storage_mode('google_cloud')
+# google_cloud_bucket_name(ENV['MATCH_GCS_BUCKET'] || 'company-certificates')
+# google_cloud_keys_file(ENV['MATCH_GCS_KEYS_FILE'] || 'gc_keys.json')
+
+# ============================================================================
+# APP CONFIGURATION
+# ============================================================================
+
+# Primary app identifier
+app_identifier([
+  ENV['APP_IDENTIFIER'] || 'com.company.app',
+  "#{ENV['APP_IDENTIFIER'] || 'com.company.app'}.widget",
+  "#{ENV['APP_IDENTIFIER'] || 'com.company.app'}.notification-service",
+  "#{ENV['APP_IDENTIFIER'] || 'com.company.app'}.share"
+])
+
+# Apple Developer Team ID
+team_id(ENV['TEAM_ID'] || 'XXXXXXXXXX')
+
+# Username for Apple Developer Portal
+username(ENV['APPLE_ID'] || 'developer@company.com')
+
+# ============================================================================
+# CERTIFICATE TYPES
+# ============================================================================
+
+# Default certificate type (appstore, adhoc, development, enterprise)
+type('appstore')
+
+# ============================================================================
+# SECURITY
+# ============================================================================
+
+# Encryption password for the certificates repo
+# CRITICAL: Never commit this to version control!
+# Set via environment variable: MATCH_PASSWORD
+
+# Enable readonly mode by default (safer for CI)
+readonly(true)
+
+# Clone depth for faster cloning
+clone_branch_directly(true)
+shallow_clone(true)
+
+# ============================================================================
+# KEYCHAIN (CI Configuration)
+# ============================================================================
+
+# Keychain name for CI environments
+keychain_name(ENV['MATCH_KEYCHAIN_NAME'] || 'login.keychain')
+
+# Keychain password for CI
+keychain_password(ENV['MATCH_KEYCHAIN_PASSWORD'])
+
+# ============================================================================
+# ADDITIONAL OPTIONS
+# ============================================================================
+
+# Generate Apple certs if needed
+generate_apple_certs(true)
+
+# Skip documentation
+skip_docs(false)
+
+# Verbose output for debugging
+verbose(ENV['MATCH_VERBOSE'] == 'true')
+
+# Platform (ios, macos, tvos)
+platform('ios')
+
+# ============================================================================
+# API KEY AUTHENTICATION
+# ============================================================================
+
+# Use API Key instead of username/password
+api_key_path(ENV['APP_STORE_CONNECT_API_KEY_PATH'])
+
+# Or set individual values
+# api_key(
+#   key_id: ENV['APP_STORE_CONNECT_API_KEY_ID'],
+#   issuer_id: ENV['APP_STORE_CONNECT_ISSUER_ID'],
+#   key_content: ENV['APP_STORE_CONNECT_API_KEY_CONTENT'],
+#   is_key_content_base64: true
+# )

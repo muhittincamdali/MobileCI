@@ -1,0 +1,543 @@
+# iOS App Store Release Workflow
+# Full production release pipeline to App Store
+# Version: 2.0.0
+
+name: iOS App Store Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.2.3)'
+        required: true
+        type: string
+      submit_for_review:
+        description: 'Submit for App Store review'
+        required: false
+        default: 'false'
+        type: boolean
+      phased_release:
+        description: 'Enable phased release'
+        required: false
+        default: 'true'
+        type: boolean
+
+concurrency:
+  group: ios-release
+  cancel-in-progress: false
+
+env:
+  WORKSPACE_NAME: App.xcworkspace
+  SCHEME_NAME: App
+  XCODE_VERSION: '15.2'
+  RUBY_VERSION: '3.2'
+  BUNDLE_ID: ${{ secrets.APP_IDENTIFIER }}
+
+jobs:
+  # ===========================================================================
+  # PRE-RELEASE VALIDATION
+  # ===========================================================================
+  validate:
+    name: Pre-Release Validation
+    runs-on: macos-14
+    timeout-minutes: 15
+    
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      build_number: ${{ steps.version.outputs.build_number }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Determine version
+        id: version
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          fi
+          
+          # Validate semantic version
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid version format: $VERSION"
+            exit 1
+          fi
+          
+          BUILD_NUMBER="${{ github.run_number }}"
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+          echo "Releasing version: $VERSION ($BUILD_NUMBER)"
+      
+      - name: Check git status
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::warning::Working directory is not clean"
+            git status --short
+          fi
+      
+      - name: Verify branch
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          if [ "$CURRENT_BRANCH" != "main" ] && [ "$CURRENT_BRANCH" != "master" ]; then
+            echo "::warning::Releasing from non-main branch: $CURRENT_BRANCH"
+          fi
+      
+      - name: Check for existing tag
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            echo "::warning::Tag v$VERSION already exists"
+          fi
+
+  # ===========================================================================
+  # BUILD FOR RELEASE
+  # ===========================================================================
+  build:
+    name: Build Release
+    runs-on: macos-14
+    needs: validate
+    timeout-minutes: 60
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Select Xcode version
+        run: |
+          sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
+          xcodebuild -version
+      
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+      
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: |
+            Pods
+            ~/.cocoapods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+      
+      - name: Install dependencies
+        run: |
+          bundle install --jobs 4 --retry 3
+          bundle exec pod install --repo-update
+      
+      - name: Setup code signing
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_TOKEN }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+        run: |
+          # Create temporary keychain
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+          
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain
+          
+          # Run match
+          bundle exec fastlane match appstore \
+            --readonly true \
+            --keychain_name "$KEYCHAIN_PATH" \
+            --keychain_password "$KEYCHAIN_PASSWORD"
+      
+      - name: Update version and build number
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          BUILD_NUMBER="${{ needs.validate.outputs.build_number }}"
+          
+          agvtool new-marketing-version "$VERSION"
+          agvtool new-version -all "$BUILD_NUMBER"
+          
+          echo "Updated to version $VERSION ($BUILD_NUMBER)"
+      
+      - name: Build IPA
+        env:
+          TEAM_ID: ${{ secrets.TEAM_ID }}
+        run: |
+          set -o pipefail
+          
+          xcodebuild -workspace "${{ env.WORKSPACE_NAME }}" \
+            -scheme "${{ env.SCHEME_NAME }}" \
+            -configuration Release \
+            -archivePath ./build/App.xcarchive \
+            clean archive \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM="${{ secrets.TEAM_ID }}" \
+            | xcpretty --color
+          
+          # Export IPA
+          cat > ./build/ExportOptions.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>${{ secrets.TEAM_ID }}</string>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>compileBitcode</key>
+            <true/>
+            <key>destination</key>
+            <string>upload</string>
+          </dict>
+          </plist>
+          EOF
+          
+          xcodebuild -exportArchive \
+            -archivePath ./build/App.xcarchive \
+            -exportOptionsPlist ./build/ExportOptions.plist \
+            -exportPath ./build/Release \
+            | xcpretty --color
+      
+      - name: Verify IPA
+        run: |
+          IPA_PATH="./build/Release/*.ipa"
+          
+          if ! ls $IPA_PATH 1> /dev/null 2>&1; then
+            echo "::error::IPA file not found!"
+            exit 1
+          fi
+          
+          IPA_FILE=$(ls $IPA_PATH | head -1)
+          IPA_SIZE=$(du -h "$IPA_FILE" | cut -f1)
+          
+          echo "IPA created: $IPA_FILE ($IPA_SIZE)"
+          
+          # Verify signing
+          codesign -dv --verbose=4 ./build/App.xcarchive/Products/Applications/*.app 2>&1 || true
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-build
+          path: |
+            build/Release/*.ipa
+            build/App.xcarchive/dSYMs
+          retention-days: 30
+
+  # ===========================================================================
+  # RUN RELEASE TESTS
+  # ===========================================================================
+  test:
+    name: Release Tests
+    runs-on: macos-14
+    needs: [validate, build]
+    timeout-minutes: 45
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
+      
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+      
+      - name: Restore CocoaPods cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            Pods
+            ~/.cocoapods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+      
+      - name: Install dependencies
+        run: |
+          bundle install --jobs 4 --retry 3
+          bundle exec pod install
+      
+      - name: Run critical tests
+        run: |
+          set -o pipefail
+          
+          xcodebuild test \
+            -workspace "${{ env.WORKSPACE_NAME }}" \
+            -scheme "${{ env.SCHEME_NAME }}" \
+            -destination "platform=iOS Simulator,name=iPhone 15 Pro,OS=17.2" \
+            -configuration Release \
+            -testPlan CriticalTests \
+            -resultBundlePath ./TestResults.xcresult \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            | xcpretty --color
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: release-test-results
+          path: TestResults.xcresult
+          retention-days: 14
+
+  # ===========================================================================
+  # UPLOAD TO APP STORE CONNECT
+  # ===========================================================================
+  upload:
+    name: Upload to App Store Connect
+    runs-on: macos-14
+    needs: [validate, build, test]
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-build
+          path: build
+      
+      - name: Validate IPA
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+        run: |
+          # Create API key file
+          echo "$APP_STORE_CONNECT_API_KEY_CONTENT" | base64 --decode > AuthKey.p8
+          
+          IPA_FILE=$(ls build/*.ipa | head -1)
+          
+          xcrun altool --validate-app \
+            --file "$IPA_FILE" \
+            --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
+            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" \
+            --type ios
+          
+          rm AuthKey.p8
+      
+      - name: Upload to App Store Connect
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+        run: |
+          # Create API key file
+          echo "$APP_STORE_CONNECT_API_KEY_CONTENT" | base64 --decode > AuthKey.p8
+          
+          IPA_FILE=$(ls build/*.ipa | head -1)
+          
+          xcrun altool --upload-app \
+            --file "$IPA_FILE" \
+            --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
+            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" \
+            --type ios
+          
+          rm AuthKey.p8
+          
+          echo "Successfully uploaded to App Store Connect!"
+
+  # ===========================================================================
+  # SUBMIT FOR REVIEW (Optional)
+  # ===========================================================================
+  submit:
+    name: Submit for Review
+    runs-on: macos-14
+    needs: [validate, upload]
+    if: ${{ inputs.submit_for_review == 'true' }}
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+      
+      - name: Install dependencies
+        run: bundle install --jobs 4 --retry 3
+      
+      - name: Submit for review
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          
+          bundle exec fastlane run deliver \
+            submit_for_review:true \
+            automatic_release:false \
+            phased_release:${{ inputs.phased_release }} \
+            app_version:"$VERSION" \
+            skip_screenshots:true \
+            skip_metadata:true \
+            precheck_include_in_app_purchases:false \
+            submission_information:'{
+              "add_id_info_uses_idfa": false,
+              "export_compliance_uses_encryption": false
+            }'
+
+  # ===========================================================================
+  # POST-RELEASE TASKS
+  # ===========================================================================
+  post-release:
+    name: Post-Release Tasks
+    runs-on: ubuntu-latest
+    needs: [validate, upload]
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Create Git tag
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          
+          if ! git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            git tag -a "v$VERSION" -m "Release v$VERSION"
+            git push origin "v$VERSION"
+          fi
+      
+      - name: Generate changelog
+        id: changelog
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          
+          # Get previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          
+          if [ -n "$PREV_TAG" ]; then
+            CHANGELOG=$(git log --pretty=format:"- %s" "$PREV_TAG"..HEAD --no-merges | head -50)
+          else
+            CHANGELOG="Initial release"
+          fi
+          
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.validate.outputs.version }}
+          name: Release v${{ needs.validate.outputs.version }}
+          body: |
+            ## Release v${{ needs.validate.outputs.version }}
+            
+            Build: ${{ needs.validate.outputs.build_number }}
+            
+            ### Changes
+            ${{ steps.changelog.outputs.changelog }}
+            
+            ### Installation
+            This release is available on the App Store.
+          draft: false
+          prerelease: false
+      
+      - name: Notify Slack
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "iOS App v${{ needs.validate.outputs.version }} has been submitted to App Store Connect",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*iOS App Store Release*\n\nVersion: `${{ needs.validate.outputs.version }}`\nBuild: `${{ needs.validate.outputs.build_number }}`\n\nThe build has been uploaded to App Store Connect."
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ===========================================================================
+  # UPLOAD DSYMS TO CRASHLYTICS
+  # ===========================================================================
+  upload-dsyms:
+    name: Upload dSYMs
+    runs-on: macos-14
+    needs: [validate, build, upload]
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-build
+          path: build
+      
+      - name: Upload to Crashlytics
+        if: ${{ secrets.FIREBASE_APP_ID != '' }}
+        env:
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+        run: |
+          # Install Firebase CLI
+          curl -sL https://firebase.tools | bash
+          
+          # Upload dSYMs
+          if [ -d "build/dSYMs" ]; then
+            firebase crashlytics:symbols:upload \
+              --app="$FIREBASE_APP_ID" \
+              build/dSYMs
+          fi
+      
+      - name: Upload to Sentry
+        if: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: |
+          # Install Sentry CLI
+          curl -sL https://sentry.io/get-cli/ | bash
+          
+          # Upload dSYMs
+          if [ -d "build/dSYMs" ]; then
+            sentry-cli upload-dif \
+              --org "$SENTRY_ORG" \
+              --project "$SENTRY_PROJECT" \
+              build/dSYMs
+          fi
