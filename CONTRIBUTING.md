@@ -1,178 +1,80 @@
-# Contributing to MobileCI
+# Contributing to SwiftRouter
 
-First off, thank you for considering contributing to MobileCI! Every contribution helps make mobile CI/CD better for everyone.
-
-## Table of Contents
-
-- [Code of Conduct](#code-of-conduct)
-- [How Can I Contribute?](#how-can-i-contribute)
-- [Getting Started](#getting-started)
-- [Template Guidelines](#template-guidelines)
-- [Pull Request Process](#pull-request-process)
-- [Style Guide](#style-guide)
+First off, thank you for considering contributing to SwiftRouter! It's people like you that make SwiftRouter such a great tool.
 
 ## Code of Conduct
 
-This project and everyone participating in it is governed by our [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+This project and everyone participating in it is governed by our Code of Conduct. By participating, you are expected to uphold this code.
 
 ## How Can I Contribute?
 
 ### Reporting Bugs
 
-- Use the [bug report template](.github/ISSUE_TEMPLATE/bug_report.md)
-- Include the workflow YAML and error logs
-- Specify the runner OS and version
+Before creating bug reports, please check the existing issues as you might find out that you don't need to create one. When you are creating a bug report, please include as many details as possible:
 
-### Suggesting Templates
+- **Use a clear and descriptive title**
+- **Describe the exact steps which reproduce the problem**
+- **Provide specific examples to demonstrate the steps**
+- **Describe the behavior you observed after following the steps**
+- **Explain which behavior you expected to see instead and why**
+- **Include Swift version and OS version**
 
-- Use the [feature request template](.github/ISSUE_TEMPLATE/feature_request.md)
-- Describe the use case clearly
-- Provide example workflow if possible
+### Suggesting Enhancements
 
-### Improving Documentation
+Enhancement suggestions are tracked as GitHub issues. When creating an enhancement suggestion, please include:
 
-- Fix typos or unclear instructions
-- Add examples for existing templates
-- Improve secrets setup guides
+- **Use a clear and descriptive title**
+- **Provide a step-by-step description of the suggested enhancement**
+- **Provide specific examples to demonstrate the steps**
+- **Describe the current behavior and explain which behavior you expected to see instead**
+- **Explain why this enhancement would be useful**
 
-### Adding Templates
+### Pull Requests
 
-- Follow the template structure conventions
-- Include all required comments and documentation
-- Test on a real project before submitting
+1. Fork the repo and create your branch from `main`
+2. If you've added code that should be tested, add tests
+3. If you've changed APIs, update the documentation
+4. Ensure the test suite passes
+5. Make sure your code follows the existing style (SwiftLint)
+6. Issue that pull request!
 
-## Getting Started
+## Development Setup
 
-1. **Fork** the repository
-2. **Clone** your fork:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/MobileCI.git
-   cd MobileCI
-   ```
-3. **Create a branch:**
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-4. **Make your changes**
-5. **Test your changes** in a real GitHub Actions workflow
-6. **Commit** using conventional commits:
-   ```bash
-   git commit -m "feat(ios): add xcresult parsing step"
-   ```
-7. **Push** and create a pull request
+```bash
+# Clone your fork
+git clone https://github.com/YOUR_USERNAME/SwiftRouter.git
 
-## Template Guidelines
+# Navigate to the project
+cd SwiftRouter
 
-### Structure
+# Open in Xcode
+open Package.swift
 
-Every workflow template should include:
-
-1. **Header comment** with description, required secrets, and usage
-2. **Trigger configuration** with clear defaults
-3. **Environment variables** section marked with `CUSTOMIZE` comments
-4. **Jobs** with descriptive names
-5. **Caching** where applicable
-6. **Artifact uploads** for build outputs
-
-### Required Sections
-
-```yaml
-# ============================================================================
-# Template: [Name]
-# Description: [What it does]
-# Platform: [iOS/Flutter/React Native/Shared]
-# Required Secrets: [List]
-# Usage: Copy to .github/workflows/ in your project
-# ============================================================================
-
-name: [Descriptive Name]
-
-on:
-  # Trigger configuration
-
-# ===== CUSTOMIZE START =====
-env:
-  # User-configurable variables
-# ===== CUSTOMIZE END =====
-
-jobs:
-  # Job definitions
+# Run tests
+swift test
 ```
-
-### Naming Conventions
-
-- File names: `kebab-case.yml`
-- Job names: `kebab-case`
-- Step names: Descriptive, starting with a verb
-- Environment variables: `UPPER_SNAKE_CASE`
-
-### Caching
-
-Always include caching for:
-- Package managers (SPM, CocoaPods, Gradle, npm, pub)
-- Build artifacts where possible
-- Use `actions/cache@v4`
-
-### Error Handling
-
-- Use `continue-on-error` sparingly and only with justification
-- Include `timeout-minutes` on long-running jobs
-- Upload logs/artifacts on failure using `if: failure()`
-
-## Pull Request Process
-
-1. Fill out the pull request template completely
-2. Ensure all templates have proper header comments
-3. Update README.md if adding new templates
-4. Link any related issues
-5. Wait for review from a maintainer
-
-### Review Criteria
-
-- [ ] Template follows the structure guidelines
-- [ ] All secrets are documented
-- [ ] Caching is implemented
-- [ ] Template has been tested on a real project
-- [ ] README is updated
-- [ ] No hardcoded values (use environment variables)
 
 ## Style Guide
 
-### YAML
+- Follow [Swift API Design Guidelines](https://swift.org/documentation/api-design-guidelines/)
+- Use SwiftLint for code style consistency
+- Write meaningful commit messages following [Conventional Commits](https://www.conventionalcommits.org/)
+- Document public APIs with DocC-compatible comments
 
-- 2-space indentation
-- Use `>-` for multi-line strings
-- Quote strings that could be interpreted as booleans or numbers
-- Comment non-obvious steps
+## Commit Messages
 
-### Shell Scripts
+We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
 
-- Use `#!/bin/bash` shebang
-- Include `set -euo pipefail`
-- Quote all variables
-- Add usage/help functions
-- Include error handling
+- `feat:` A new feature
+- `fix:` A bug fix
+- `docs:` Documentation only changes
+- `style:` Code style changes (formatting, semicolons, etc)
+- `refactor:` Code change that neither fixes a bug nor adds a feature
+- `test:` Adding missing tests
+- `chore:` Changes to the build process or auxiliary tools
 
-### Commit Messages
+Example: `feat(deeplink): add universal link support`
 
-Follow [Conventional Commits](https://www.conventionalcommits.org/):
+## License
 
-```
-feat(ios): add code signing workflow
-fix(flutter): correct pub cache path
-docs: update React Native setup guide
-chore: update action versions
-```
-
-### Scopes
-
-- `ios` — iOS templates
-- `flutter` — Flutter templates
-- `rn` — React Native templates
-- `shared` — Shared templates
-- `fastlane` — Fastlane files
-- `scripts` — Shell scripts
-
----
-
-Thank you for contributing! 🚀
+By contributing, you agree that your contributions will be licensed under the MIT License.
