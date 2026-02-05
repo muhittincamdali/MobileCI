@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/Assets/logo.png" alt="MobileCI" width="180"/>
-</p>
-
 <h1 align="center">MobileCI</h1>
 
 <p align="center">
