@@ -43,11 +43,13 @@ let package = Package(
                 .product(name: "Logging", package: "swift-log"),
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
                 .product(name: "CryptoSwift", package: "CryptoSwift")
-            ]
+            ],
+            path: "Sources/MobileCIKit"
         ),
         .testTarget(
             name: "MobileCITests",
-            dependencies: ["MobileCIKit"]
+            dependencies: ["MobileCIKit"],
+            path: "Tests/MobileCITests"
         )
     ]
 )
