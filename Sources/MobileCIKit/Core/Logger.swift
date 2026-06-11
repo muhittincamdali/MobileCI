@@ -70,7 +70,7 @@ public enum LogDestination: Sendable {
     case console
     case file(String)
     case memory
-    case custom((LogEntry) -> Void)
+    case custom(@Sendable (LogEntry) -> Void)
     
     public static func == (lhs: LogDestination, rhs: LogDestination) -> Bool {
         switch (lhs, rhs) {

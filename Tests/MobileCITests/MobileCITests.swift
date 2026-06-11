@@ -138,6 +138,50 @@ final class MobileCITests: XCTestCase {
         // This test will vary based on where it's run
         XCTAssertNotNil(env)
     }
+
+    func testCIEnvironmentDetectsKnownProvidersFromEnvironmentVariables() {
+        XCTAssertEqual(
+            CIEnvironment.detect(environment: ["GITHUB_ACTIONS": "true"]).provider,
+            .githubActions
+        )
+        XCTAssertEqual(
+            CIEnvironment.detect(environment: ["BITRISE_IO": "true"]).provider,
+            .bitrise
+        )
+        XCTAssertEqual(
+            CIEnvironment.detect(environment: ["CIRCLECI": "true"]).provider,
+            .circleCI
+        )
+        XCTAssertEqual(
+            CIEnvironment.detect(environment: ["JENKINS_HOME": "/var/jenkins_home"]).provider,
+            .jenkins
+        )
+        XCTAssertEqual(
+            CIEnvironment.detect(environment: ["JENKINS_URL": "https://jenkins.example.com"]).provider,
+            .jenkins
+        )
+        XCTAssertEqual(
+            CIEnvironment.detect(environment: ["TRAVIS": "true"]).provider,
+            .travisCI
+        )
+        XCTAssertEqual(
+            CIEnvironment.detect(environment: ["TF_BUILD": "true"]).provider,
+            .azurePipelines
+        )
+        XCTAssertEqual(
+            CIEnvironment.detect(environment: ["TF_BUILD": "True"]).provider,
+            .azurePipelines
+        )
+        XCTAssertEqual(
+            CIEnvironment.detect(environment: ["GITLAB_CI": "true"]).provider,
+            .gitlabCI
+        )
+    }
+
+    func testCIEnvironmentDefaultsToLocalForUnknownEnvironment() {
+        let env = CIEnvironment.detect(environment: ["CI": "true"])
+        XCTAssertEqual(env.provider, .local)
+    }
     
     // MARK: - Process Runner Tests
     

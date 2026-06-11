@@ -312,7 +312,7 @@ public struct DeployConfig: Codable, Sendable {
     public let targets: [DeployTargetConfig]
     public let preDeployCommands: [String]?
     public let postDeployCommands: [String]?
-    public let changelog: ChangelogConfig?
+    public let changelog: ProjectChangelogConfig?
     public let versionBump: VersionBumpConfig?
     public let skipWaitingForProcessing: Bool?
     public let distributeExternal: Bool?
@@ -322,7 +322,7 @@ public struct DeployConfig: Codable, Sendable {
         targets: [DeployTargetConfig] = [],
         preDeployCommands: [String]? = nil,
         postDeployCommands: [String]? = nil,
-        changelog: ChangelogConfig? = nil,
+        changelog: ProjectChangelogConfig? = nil,
         versionBump: VersionBumpConfig? = nil,
         skipWaitingForProcessing: Bool? = nil,
         distributeExternal: Bool? = nil,
@@ -406,7 +406,7 @@ public enum DeployTargetType: String, Codable, Sendable, CaseIterable {
 }
 
 /// Changelog configuration
-public struct ChangelogConfig: Codable, Sendable {
+public struct ProjectChangelogConfig: Codable, Sendable {
     public let enabled: Bool
     public let format: String?
     public let template: String?

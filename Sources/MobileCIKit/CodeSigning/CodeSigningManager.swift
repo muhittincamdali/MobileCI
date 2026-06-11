@@ -95,7 +95,7 @@ public enum ProfileType: String, Codable, CaseIterable, Sendable {
 // MARK: - Provisioning Profile Info
 
 /// Information about a provisioning profile
-public struct ProvisioningProfile: Codable, Sendable {
+public struct ProvisioningProfile: Codable, @unchecked Sendable {
     public let uuid: String
     public let name: String
     public let teamId: String
@@ -801,9 +801,9 @@ public struct CICodeSigningSetup: Sendable {
         return ExportOptions(
             method: method,
             teamId: certificate.teamId,
-            signingStyle: .manual,
-            signingIdentity: certificate.commonName,
-            provisioningProfiles: Dictionary(uniqueKeysWithValues: profiles.map { ($0.bundleId, $0.name) })
+            provisioningProfiles: Dictionary(uniqueKeysWithValues: profiles.map { ($0.bundleId, $0.name) }),
+            signingCertificate: certificate.commonName,
+            signingStyle: .manual
         )
     }
 }

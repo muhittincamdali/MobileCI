@@ -88,7 +88,7 @@ public struct BuildCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Version string override")
     var version: String?
     
-    @Option(name: .long, help: "Additional build arguments", parsing: .upToNextOption)
+    @Option(name: .long, parsing: .upToNextOption, help: "Additional build arguments")
     var buildArgs: [String] = []
     
     @Option(name: .long, help: "Maximum parallel jobs")
@@ -202,7 +202,7 @@ public struct BuildCommand: AsyncParsableCommand {
         var detectedProject: String?
         var detectedWorkspace: String?
         var detectedScheme = scheme
-        var detectedTarget = target
+        let detectedTarget = target
         var detectedPackage: String?
         var packageManagers: [PackageManager] = []
         
