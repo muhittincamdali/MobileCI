@@ -110,6 +110,15 @@ public enum Platform: String, ExpressibleByArgument, CaseIterable, Codable, Send
             return nil
         }
     }
+
+    public var isApplePlatform: Bool {
+        switch self {
+        case .ios, .macos, .watchos, .tvos, .visionos:
+            return true
+        default:
+            return false
+        }
+    }
 }
 
 // MARK: - Package Manager
@@ -452,15 +461,19 @@ public struct ExportOptions: Codable, Sendable {
 }
 
 /// Export methods for iOS builds
-public enum ExportMethod: String, Codable, Sendable, CaseIterable {
+public enum ExportMethod: String, Codable, Sendable, CaseIterable, ExpressibleByArgument {
     case appStore = "app-store"
     case adHoc = "ad-hoc"
     case enterprise = "enterprise"
     case development = "development"
     case validation = "validation"
     case package = "package"
-    case developerIdApplication = "developer-id"
+    case developerID = "developer-id"
     case macApplication = "mac-application"
+
+    public var plistValue: String {
+        rawValue
+    }
 }
 
 /// Manifest options for over-the-air distribution

@@ -254,55 +254,6 @@ public struct GenerateChangelogCommand: AsyncParsableCommand {
     }
 }
 
-/// Placeholder commands for completeness
-public struct TestCommand: AsyncParsableCommand {
-    public static let configuration = CommandConfiguration(
-        commandName: "test",
-        abstract: "Run tests for mobile applications"
-    )
-    
-    @Option(name: .shortAndLong, help: "Platform")
-    var platform: Platform = .ios
-    
-    @Option(name: .long, help: "Scheme")
-    var scheme: String?
-    
-    @Flag(name: .long, help: "Generate coverage")
-    var coverage: Bool = false
-    
-    @Flag(name: .long, help: "Parallel testing")
-    var parallel: Bool = false
-    
-    @Flag(name: .shortAndLong, help: "Verbose output")
-    var verbose: Bool = false
-    
-    public init() {}
-    
-    public func run() async throws {
-        let logger = Logger.shared
-        logger.info("Running tests...")
-        
-        var command = "xcodebuild test"
-        if let scheme = scheme {
-            command += " -scheme '\(scheme)'"
-        }
-        command += " -destination 'platform=iOS Simulator,name=iPhone 15 Pro'"
-        
-        if coverage {
-            command += " -enableCodeCoverage YES"
-        }
-        
-        let result = try ProcessRunner.shared.run(command, options: .default.with(printOutput: true))
-        
-        if result.success {
-            logger.success("Tests passed!")
-        } else {
-            logger.error("Tests failed")
-            throw MobileCIError.testFailed(result.stderr)
-        }
-    }
-}
-
 public struct LintCommand: AsyncParsableCommand {
     public static let configuration = CommandConfiguration(
         commandName: "lint",
