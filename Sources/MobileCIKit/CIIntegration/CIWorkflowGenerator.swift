@@ -5,6 +5,7 @@
 // Supports GitHub Actions, GitLab CI, Bitrise, CircleCI, and Jenkins.
 
 import Foundation
+import ArgumentParser
 import Yams
 
 // MARK: - CI Provider
@@ -160,7 +161,7 @@ public struct WorkflowConfig: Codable, Sendable {
 // MARK: - Deploy Target
 
 /// Deployment target configuration
-public enum DeployTarget: String, Codable, Sendable {
+public enum DeployTarget: String, Codable, Sendable, ExpressibleByArgument {
     case testflight = "testflight"
     case appStore = "appstore"
     case firebase = "firebase"

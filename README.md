@@ -22,7 +22,9 @@
   <a href="#quick-start">Quick Start</a> •
   <a href="#commands">Commands</a> •
   <a href="#ci-integration">CI Integration</a> •
-  <a href="#documentation">Documentation</a>
+  <a href="#documentation">Documentation</a> •
+  <a href="docs/BENCHMARKS.md">Benchmarks</a> •
+  <a href="ROADMAP.md">Roadmap</a>
 </p>
 
 ---

@@ -7,6 +7,7 @@
 import Foundation
 import AsyncHTTPClient
 import NIOCore
+import NIOHTTP1
 import CryptoSwift
 
 // MARK: - App Store Connect Configuration
@@ -647,7 +648,7 @@ public final class AppStoreConnectClient: @unchecked Sendable {
         }
         
         var request = HTTPClientRequest(url: urlString)
-        request.method = method
+        request.method = method.nioMethod
         request.headers.add(name: "Authorization", value: "Bearer \(token)")
         request.headers.add(name: "Content-Type", value: "application/json")
         
@@ -684,6 +685,15 @@ public enum HTTPMethod: String {
     case POST
     case PATCH
     case DELETE
+
+    var nioMethod: NIOHTTP1.HTTPMethod {
+        switch self {
+        case .GET: return .GET
+        case .POST: return .POST
+        case .PATCH: return .PATCH
+        case .DELETE: return .DELETE
+        }
+    }
 }
 
 // MARK: - Empty Response

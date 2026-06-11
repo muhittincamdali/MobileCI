@@ -56,10 +56,10 @@ public struct TestCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Output directory for results")
     var output: String?
     
-    @Option(name: .long, help: "Specific test classes to run", parsing: .upToNextOption)
+    @Option(name: .long, parsing: .upToNextOption, help: "Specific test classes to run")
     var onlyTests: [String] = []
     
-    @Option(name: .long, help: "Test classes to skip", parsing: .upToNextOption)
+    @Option(name: .long, parsing: .upToNextOption, help: "Test classes to skip")
     var skipTests: [String] = []
     
     @Option(name: .long, help: "Test reporter format (junit, html, json, xcresult)")
@@ -77,10 +77,10 @@ public struct TestCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Number of test retries on failure")
     var retryCount: Int?
     
-    @Option(name: .long, help: "Additional test arguments", parsing: .upToNextOption)
+    @Option(name: .long, parsing: .upToNextOption, help: "Additional test arguments")
     var testArgs: [String] = []
     
-    @Option(name: .long, help: "Environment variables (KEY=VALUE)", parsing: .upToNextOption)
+    @Option(name: .long, parsing: .upToNextOption, help: "Environment variables (KEY=VALUE)")
     var env: [String] = []
     
     // MARK: - Flags
@@ -861,7 +861,7 @@ public struct TestCommand: AsyncParsableCommand {
             throw TestError.parseError("Invalid XML encoding")
         }
         
-        var tests: [TestResult.TestCase] = []
+        let tests: [TestResult.TestCase] = []
         var suiteName = "Unknown"
         var suiteDuration: TimeInterval = 0
         
