@@ -1,0 +1,50 @@
+name: 'Elite Swift 6 CI'
+description: 'The world-class, zero-bloat CI pipeline for modern Swift 6 mobile applications.'
+branding:
+  icon: 'shield'
+  color: 'blue'
+inputs:
+  swift-version:
+    description: 'The version of Swift to use for compilation.'
+    required: false
+    default: '6.0'
+  strict-concurrency:
+    description: 'Enforce strict concurrency checks.'
+    required: false
+    default: 'true'
+  binary-size-check:
+    description: 'Fail the build if the binary size exceeds the world-class threshold (1MB for core libraries).'
+    required: false
+    default: 'true'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Swift
+      uses: swift-actions/setup-swift@v2
+      with:
+        swift-version: ${{ inputs.swift-version }}
+        
+    - name: Build with Architecture Purity
+      shell: bash
+      run: |
+        if [ "${{ inputs.strict-concurrency }}" = "true" ]; then
+          swift build -Xswiftc -strict-concurrency=complete
+        else
+          swift build
+        fi
+        
+    - name: Run High-Integrity Tests
+      shell: bash
+      run: swift test --parallel
+      
+    - name: Enforce Zero-Bloat Standard
+      if: ${{ inputs.binary-size-check == 'true' }}
+      shell: bash
+      run: |
+        SIZE=$(du -sk .build/debug/*.dylib 2>/dev/null | awk '{print $1}' || echo "0")
+        echo "Binary size: ${SIZE}KB"
+        if [ "$SIZE" -gt 1000 ]; then
+          echo "::error::Binary size exceeds 1MB threshold for world-class efficiency."
+          exit 1
+        fi

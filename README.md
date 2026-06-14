@@ -72,7 +72,27 @@
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## Features
+## 🚀 The 2026 Standard GitHub Action
+Stop maintaining complex, brittle Fastlane scripts. Use our world-class, plug-and-play GitHub Action to enforce Swift 6 purity and zero-bloat standards automatically.
+
+```yaml
+name: CI
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Elite Swift 6 CI
+        uses: muhittincamdali/MobileCI@v1
+        with:
+          strict-concurrency: 'true'
+          binary-size-check: 'true'
+```
+
+## ✨ Features
 
 ### 🔧 Build Automation
 - **Auto-detection** of Xcode projects, workspaces, and schemes
