@@ -256,6 +256,16 @@ struct LintRuleTests {
         #expect(!rules(yaml).contains(.untrustedInputInScript))
     }
 
+    /// GitHub does not offer the `env` context in a job `env:`, so `B: ${{ env.A }}` there is
+    /// empty and an untrusted workflow `A` does not reach `B`.
+    @Test func jobEnvValuesDoNotReadEnv() {
+        let assignment = "B: ${{ env.A }}"
+        let yaml = "env:\n  A: ${{ github.head_ref }}\n"
+            + cleanWorkflow.replacingOccurrences(of: "    env:\n", with: "    env:\n      \(assignment)\n")
+            + "\n      - run: echo \"${{ env.B }}\"\n"
+        #expect(!rules(yaml).contains(.untrustedInputInScript))
+    }
+
     /// Every `env:` value in three scopes reads the whole `env` context. Each scope is worked out
     /// once, so a pull request that adds such a file cannot hold the lint step until its job
     /// times out; following the values again for every member took minutes at 300 per scope.

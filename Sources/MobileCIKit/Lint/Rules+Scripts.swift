@@ -4,10 +4,12 @@ extension Rules {
     // MARK: MCI008, MCI011, MCI015
 
     static func checkScripts(_ context: inout RuleContext) {
-        // GitHub takes `env.NAME` from the step, then the job, then the workflow.
+        // GitHub takes `env.NAME` from the step, then the job, then the workflow. Only a step
+        // `env:` value can read `env`; in a job or workflow `env:` the context is not available
+        // and `${{ env.A }}` expands to an empty string.
         let workflowEnvironment = EnvironmentTaint(scope: context.workflow.env, over: .empty, readsOuter: false)
         for job in context.workflow.jobs {
-            let jobEnvironment = EnvironmentTaint(scope: job.env, over: workflowEnvironment, readsOuter: true)
+            let jobEnvironment = EnvironmentTaint(scope: job.env, over: workflowEnvironment, readsOuter: false)
             for step in job.steps {
                 let environment = EnvironmentTaint(scope: step.env, over: jobEnvironment, readsOuter: true)
                 if let run = step.run, let script = run.string {
