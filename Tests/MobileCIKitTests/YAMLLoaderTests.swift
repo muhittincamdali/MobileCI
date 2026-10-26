@@ -32,7 +32,7 @@ struct YAMLLoaderTests {
 
     @Test func duplicateKeysAreRefused() {
         let result = YAMLLoader.load("jobs: {}\njobs: {}\n")
-        #expect(result == .failure(.duplicateKey("jobs")))
+        #expect(result == .failure(.duplicateKey(SourceLocation(line: 1, column: 1))))
     }
 
     @Test func nestingPastTheLimitIsRefused() {

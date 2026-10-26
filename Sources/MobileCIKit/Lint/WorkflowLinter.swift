@@ -83,17 +83,18 @@ public struct WorkflowLinter: Sendable {
     }
 
     private static func location(of error: YAMLLoadError) -> SourceLocation {
-        if case .syntax(let location?) = error { return location }
-        return .start
+        switch error {
+        case .syntax(let location?), .duplicateKey(let location?): return location
+        default: return .start
+        }
     }
 
     private static func describe(_ error: YAMLLoadError) -> String {
         switch error {
         case .syntax:
             return "The file is not valid YAML at this position."
-        case .duplicateKey(let key):
-            let shown = Rules.quoted(key, allowed: Rules.labelCharacters, fallback: "A key")
-            return "\(shown) appears twice in one mapping."
+        case .duplicateKey:
+            return "This key appears more than once in the same mapping."
         case .tooDeep(let limit):
             return "The YAML is nested more than \(limit) levels deep; workflows are not."
         case .tooManyNodes(let limit):

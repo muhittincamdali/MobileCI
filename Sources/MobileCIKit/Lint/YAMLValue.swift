@@ -77,7 +77,9 @@ public struct YAMLMember: Sendable {
 /// messages quote the input, which may hold secrets, so only positions are kept.
 public enum YAMLLoadError: Error, Equatable, Sendable {
     case syntax(SourceLocation?)
-    case duplicateKey(String)
+    /// A key that appears twice in one mapping, at the first key Yams reports. The key itself
+    /// is not kept: it can be any text, a token included.
+    case duplicateKey(SourceLocation?)
     case tooDeep(limit: Int)
     case tooManyNodes(limit: Int)
     case empty
@@ -118,9 +120,10 @@ enum YAMLLoader {
         switch error {
         case .scanner(_, _, let mark, _), .parser(_, _, let mark, _), .composer(_, _, let mark, _):
             return .syntax(SourceLocation(line: mark.line, column: mark.column))
-        case .duplicatedKeysInMapping(let duplicates, _):
-            let key = duplicates.first ?? ""
-            return .duplicateKey(key.sanitizedForTerminal.truncated(to: 80))
+        case .duplicatedKeysInMapping(_, let context):
+            // Yams uses line 0 when the key node has no position.
+            let mark = context.mark
+            return .duplicateKey(mark.line > 0 ? SourceLocation(line: mark.line, column: mark.column) : nil)
         default:
             return .syntax(nil)
         }

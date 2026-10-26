@@ -75,6 +75,14 @@ struct LintRuleTests {
         #expect(action?.message.contains("t0ken") == false)
     }
 
+    @Test func duplicateKeysAreReportedWithoutTheirName() {
+        let key = "TOKEN_" + String(repeating: "a1b2", count: 9)
+        let finding = lint("on: push\njobs:\n  build:\n    env:\n      \(key): a\n      \(key): b\n").first
+        #expect(finding?.rule == .invalidWorkflow)
+        #expect(finding?.message == "This key appears more than once in the same mapping.")
+        #expect(finding?.location.line == 5)
+    }
+
     @Test func reusableWorkflowCallsArePinnedToo() {
         let yaml = cleanWorkflow + "\n  shared:\n    uses: owner/repo/.github/workflows/ci.yml@main\n"
         #expect(lint(yaml).filter { $0.rule == .unpinnedAction }.count == 1)
