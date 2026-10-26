@@ -22,7 +22,16 @@ struct TextFileTests {
         #expect(throws: TextFileError.unreadable(path: directory.path)) { try TextFile.read(directory) }
     }
 
-    /// Opening a FIFO blocks until a writer appears; it is refused before it is opened.
+    @Test func brokenLinksAreMissingAndDevicesUnreadable() throws {
+        let folder = try TemporaryFolder()
+        let link = folder.url.appendingPathComponent("broken.yml")
+        try FileManager.default.createSymbolicLink(atPath: link.path, withDestinationPath: "nowhere.yml")
+        #expect(throws: TextFileError.missing(path: link.path)) { try TextFile.read(link) }
+        #expect(throws: TextFileError.unreadable(path: "/dev/zero")) { try TextFile.read(URL(fileURLWithPath: "/dev/zero")) }
+    }
+
+    /// Opening a FIFO for reading would block until a writer appears; it is opened without
+    /// waiting and refused once its type is known.
     @Test func refusesFIFOs() throws {
         let folder = try TemporaryFolder()
         let fifo = folder.url.appendingPathComponent("pipe.yml")

@@ -22,7 +22,7 @@ public enum TextFileError: Error, Equatable, Sendable, CustomStringConvertible {
 }
 
 /// Reads text files with an upper size bound, so a huge or endless file (a FIFO, `/dev/zero`)
-/// cannot exhaust memory.
+/// cannot exhaust memory. Symbolic links to files are followed, as `open(2)` does.
 public enum TextFile {
     /// Size limit for workflow, manifest and configuration files.
     public static let defaultLimit = 1 << 20
@@ -33,18 +33,19 @@ public enum TextFile {
     /// Reads at most `limit` bytes; a longer file fails with ``TextFileError/tooLarge(path:limit:)``.
     public static func read(_ url: URL, limit: Int = defaultLimit) throws(TextFileError) -> String {
         let path = url.path
-        var isDirectory: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory) else {
-            throw .missing(path: path)
+        // The type is checked on the opened descriptor, so the file cannot be swapped for a FIFO
+        // or a device between the check and the read. `O_NONBLOCK` keeps the open itself from
+        // waiting for a FIFO writer; it has no effect on reading a regular file.
+        let descriptor = open(path, O_RDONLY | O_NONBLOCK | O_CLOEXEC)
+        guard descriptor >= 0 else {
+            throw errno == ENOENT || errno == ENOTDIR ? .missing(path: path) : .unreadable(path: path)
         }
-        // Opening a FIFO or a device would block or never end; only regular files are read.
-        let resolved = url.resolvingSymlinksInPath().path
-        let type = (try? FileManager.default.attributesOfItem(atPath: resolved))?[.type] as? FileAttributeType
-        guard !isDirectory.boolValue, type == .typeRegular,
-              let handle = try? FileHandle(forReadingFrom: url) else {
+        let handle = FileHandle(fileDescriptor: descriptor, closeOnDealloc: true)
+        defer { try? handle.close() }
+        var status = stat()
+        guard fstat(descriptor, &status) == 0, status.st_mode & mode_t(S_IFMT) == mode_t(S_IFREG) else {
             throw .unreadable(path: path)
         }
-        defer { try? handle.close() }
         // Reading one byte past the limit detects an oversized file without trusting its
         // reported size, which a file that grows while it is read would make wrong.
         let data: Data
