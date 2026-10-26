@@ -43,26 +43,35 @@ extension Rules {
     }
 
     /// The untrusted property that the `env.NAME` path (or the whole `env` context) is set from,
-    /// in the first of `scopes` (step, job, workflow `env:`) that defines the name.
+    /// in the first of `scopes` (step, job, workflow `env:`) that defines the name. A value that
+    /// reads `env` again (`B: ${{ env.A }}`) is followed into the scopes after its own, the ones
+    /// GitHub evaluates it against, so every hop moves outwards and the search ends.
     static func untrustedSource(of path: String, in scopes: [YAMLValue?]) -> String? {
+        untrustedSource(of: path, in: scopes[...])
+    }
+
+    private static func untrustedSource(of path: String, in scopes: ArraySlice<YAMLValue?>) -> String? {
         let segments = path.lowercased().split(separator: ".", omittingEmptySubsequences: false)
         guard segments.first == "env" else { return nil }
-        guard segments.count > 1 else {
-            return scopes.lazy.flatMap { $0?.members ?? [] }.compactMap { untrustedSource(in: $0.value) }.first
-        }
-        let name = String(segments[1])
-        for scope in scopes {
-            guard let member = scope?.members.first(where: { $0.key.lowercased() == name }) else { continue }
-            return untrustedSource(in: member.value)
+        for index in scopes.indices {
+            let outer = scopes[(index + 1)...]
+            let members = scopes[index]?.members ?? []
+            guard segments.count > 1 else {
+                if let source = members.lazy.compactMap({ untrustedSource(in: $0.value, outer: outer) }).first { return source }
+                continue
+            }
+            guard let member = members.first(where: { $0.key.lowercased() == segments[1] }) else { continue }
+            return untrustedSource(in: member.value, outer: outer)
         }
         return nil
     }
 
-    private static func untrustedSource(in value: YAMLValue) -> String? {
+    private static func untrustedSource(in value: YAMLValue, outer: ArraySlice<YAMLValue?>) -> String? {
         guard let text = value.string else { return nil }
         for occurrence in Expressions.occurrences(in: text) {
-            if let path = Expressions.propertyPaths(in: occurrence.body).first(where: UntrustedInput.isUntrusted) {
-                return path
+            for path in Expressions.propertyPaths(in: occurrence.body) {
+                if UntrustedInput.isUntrusted(path) { return path }
+                if let source = untrustedSource(of: path, in: outer) { return source }
             }
         }
         return nil

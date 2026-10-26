@@ -86,7 +86,9 @@ names, after `github.event`, `github.head_ref` and objects that contain them, su
 `toJSON(github.event)` — in `run:` scripts and in `actions/github-script`. It also follows
 `${{ env.NAME }}`: when the step, job or workflow `env:` that GitHub uses for `NAME` sets it from
 one of those properties, the expansion is reported, because it is pasted into the script the
-same way. Pass the value through `env:` and quote the variable:
+same way. A step value that reads `env` again, such as `B: ${{ env.A }}`, is followed into the
+job and workflow `env:` that GitHub evaluates it against. Pass the value through `env:` and
+quote the variable:
 
 ```yaml
 - env:

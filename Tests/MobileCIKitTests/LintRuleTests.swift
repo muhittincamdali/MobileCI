@@ -228,6 +228,34 @@ struct LintRuleTests {
         #expect(finding?.message.contains("is set from `github.event.pull_request.title`") == true)
     }
 
+    /// A step `env:` value that reads `env` again is evaluated against the job and workflow
+    /// `env:`, so `B: ${{ env.A }}` carries an untrusted `A` into `${{ env.B }}`.
+    @Test func untrustedInputThroughChainedEnvExpressionsIsReported() {
+        let yaml = "env:\n  A: ${{ github.head_ref }}\n" + cleanWorkflow + """
+
+              - env:
+                  B: ${{ env.A }}
+                run: echo "${{ env.B }}"
+        """
+        let finding = lint(yaml).first { $0.rule == .untrustedInputInScript }
+        #expect(finding?.message.contains("is set from `github.head_ref`") == true)
+        #expect(rules(yaml.replacingOccurrences(of: "${{ env.B }}", with: "${{ toJSON(env) }}")).contains(.untrustedInputInScript))
+        #expect(!rules(yaml.replacingOccurrences(of: "${{ github.head_ref }}", with: "${{ github.sha }}")).contains(.untrustedInputInScript))
+    }
+
+    /// Inside one step `env:`, `${{ env.A }}` reads the job and workflow value of `A`, not the
+    /// step's own `A`, so an untrusted step `A` does not reach `B`.
+    @Test func chainedEnvExpressionsDoNotReadTheirOwnScope() {
+        let yaml = cleanWorkflow + """
+
+              - env:
+                  A: ${{ github.head_ref }}
+                  B: ${{ env.A }}
+                run: echo "${{ env.B }}"
+        """
+        #expect(!rules(yaml).contains(.untrustedInputInScript))
+    }
+
     @Test func envExpressionsWithTrustedValuesPass() {
         let yaml = "env:\n  TITLE: ${{ github.event.pull_request.title }}\n" + cleanWorkflow + """
 
