@@ -63,6 +63,18 @@ struct LintRuleTests {
         #expect(rules(cleanWorkflow + "\n      - uses: docker://alpine:3.22\n").contains(.unpinnedAction))
     }
 
+    /// A registry login written into the reference must not be copied into the report.
+    @Test func credentialsInReferencesAreNotPrinted() {
+        let docker = lint(cleanWorkflow + "\n      - uses: docker://deploy:s3cr3tT0ken@registry.example.com/app:1.0\n")
+            .first { $0.rule == .unpinnedAction }
+        #expect(docker?.message.hasPrefix("This Docker image is pulled by tag") == true)
+        #expect(docker?.message.contains("s3cr3tT0ken") == false)
+        let plain = lint(cleanWorkflow + "\n      - uses: docker://ghcr.io/owner/app:1.0\n").first { $0.rule == .unpinnedAction }
+        #expect(plain?.message.hasPrefix("`docker://ghcr.io/owner/app:1.0`") == true)
+        let action = lint(cleanWorkflow + "\n      - uses: https://user:t0ken@example.com/owner/repo@v1\n").first { $0.rule == .unpinnedAction }
+        #expect(action?.message.contains("t0ken") == false)
+    }
+
     @Test func reusableWorkflowCallsArePinnedToo() {
         let yaml = cleanWorkflow + "\n  shared:\n    uses: owner/repo/.github/workflows/ci.yml@main\n"
         #expect(lint(yaml).filter { $0.rule == .unpinnedAction }.count == 1)

@@ -38,8 +38,18 @@ enum Rules {
         return "`\(text)`"
     }
 
-    static let referenceCharacters = CharacterSet(charactersIn:
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_./@:")
+    /// `owner/repo/path@ref`. No `:`, so a `user:token@host` URL is never printed.
+    static let actionReferenceCharacters = CharacterSet(charactersIn:
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_./@")
+
+    /// `docker://registry/image:tag`. No `@`: a digest-pinned image is never reported, and a
+    /// reference with `user:token@` before the registry is described instead of printed.
+    static let dockerReferenceCharacters = CharacterSet(charactersIn:
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_./:")
+
+    /// A normalised expression property path such as `github.event.commits.*.message`.
+    static let propertyPathCharacters = CharacterSet(charactersIn:
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.*")
 
     static let labelCharacters = CharacterSet(charactersIn:
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.")
@@ -63,7 +73,7 @@ enum Rules {
         }
         if reference.hasPrefix("docker://") {
             guard !reference.contains("@sha256:") else { return }
-            let shown = quoted(reference, allowed: referenceCharacters, fallback: "This Docker image")
+            let shown = quoted(reference, allowed: dockerReferenceCharacters, fallback: "This Docker image")
             context.report(.unpinnedAction, at: node.location, "\(shown) is pulled by tag; pin it to an `@sha256:` digest.")
             return
         }
@@ -72,7 +82,7 @@ enum Rules {
         let ref = parts[1]
         let isSHA = ref.count == 40 && ref.allSatisfy(\.isHexDigit)
         guard !isSHA else { return }
-        let shown = quoted(reference, allowed: referenceCharacters, fallback: "This action reference")
+        let shown = quoted(reference, allowed: actionReferenceCharacters, fallback: "This action reference")
         context.report(.unpinnedAction, at: node.location,
                        "\(shown) is pinned to a tag or branch, which can be moved to other code; pin it to a full commit SHA.")
     }

@@ -22,7 +22,7 @@ extension Rules {
             let location = SourceLocation(line: start.line + occurrence.lineOffset, column: start.column)
             for path in Expressions.propertyPaths(in: occurrence.body) {
                 if UntrustedInput.isUntrusted(path) {
-                    let shown = quoted(path, allowed: referenceCharacters.union(["*"]), fallback: "an event property")
+                    let shown = quoted(path, allowed: propertyPathCharacters, fallback: "an event property")
                     context.report(.untrustedInputInScript, at: location,
                                    "The script expands \(shown), text that anyone opening a pull request or issue can choose; pass it through `env:` and quote the variable.")
                 } else if isScript, path.lowercased().hasPrefix("secrets.") {
