@@ -139,7 +139,8 @@ version. Use `node-version-file: .nvmrc`.
 Without `shell: bash`, GitHub runs scripts with `bash -e`, where a pipeline's exit status is
 that of its last command: the formatter succeeds, so failing tests leave the step green. The
 rule looks for `xcodebuild`, `fastlane`, `gradle`/`gradlew`, `flutter` and `swift` piped into
-another command (continuation lines are joined; `||` is not a pipe). Add `set -o pipefail` at
+another command, with or without spaces around the `|` (continuation lines are joined; `||` is
+not a pipe). Add `set -o pipefail` at
 the top of the script, or set `shell: bash` on the step, the job or the workflow's
 `defaults.run`, which makes GitHub add `-o pipefail`.
 

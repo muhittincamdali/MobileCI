@@ -31,11 +31,11 @@ projects in a repository, write a workflow for each, lint workflows, and version
 - `mobileci lint` with 16 rules (`MCI000`–`MCI015`): invalid workflow, unpinned actions and
   Docker images, macOS jobs without a timeout or a concurrency group, `macos-latest`, Xcode not
   selected, default and `write-all` token permissions, untrusted event text in scripts and in
-  `actions/github-script`, `pull_request_target` checkouts of the pull request, `continue-on-error`,
-  secrets expanded in scripts, persisted checkout credentials, unpinned Flutter and Node.js
-  versions, and build tools piped into a formatter without `pipefail`. Output as text, JSON,
-  GitHub annotations or SARIF 2.1.0; `--fail-on`, `--disable`, and `# mobileci-ignore` /
-  `# mobileci-ignore-file` comments.
+  `actions/github-script`, also when it arrives through `${{ env.NAME }}`, `pull_request_target`
+  checkouts of the pull request, `continue-on-error`, secrets expanded in scripts, persisted
+  checkout credentials, unpinned Flutter and Node.js versions, and build tools piped into a
+  formatter without `pipefail`. Output as text, JSON, GitHub annotations or SARIF 2.1.0;
+  `--fail-on`, `--disable`, and `# mobileci-ignore` / `# mobileci-ignore-file` comments.
 - `mobileci rules`: every rule with what it finds and how to fix it.
 - `mobileci version` (`show`, `bump`, `set`, `build`): reads and writes the version and build
   number in Xcode `project.pbxproj` files, `pubspec.yaml`, `package.json`, Expo `app.json`
@@ -50,7 +50,7 @@ projects in a repository, write a workflow for each, lint workflows, and version
 - `Examples/WorkflowCheck` (an iOS app that lints workflows with MobileCIKit) and
   `Examples/flutter_sample`; their CI workflows are written by `mobileci init`, and
   `scripts/generate-workflows.sh --check` fails when any generated file drifts.
-- 108 Swift Testing tests, run on macOS, Linux and an iPhone simulator.
+- 115 Swift Testing tests, run on macOS and an iPhone simulator.
 
 ### Changed
 
