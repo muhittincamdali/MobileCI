@@ -213,6 +213,34 @@ struct LintRuleTests {
         #expect(lint(yaml).isEmpty)
     }
 
+    /// `${{ env.TITLE }}` is replaced before the shell runs, so an untrusted value set in any
+    /// `env:` scope is as dangerous as the event property itself.
+    @Test(arguments: ["step", "job", "workflow"])
+    func untrustedInputThroughEnvExpressionsIsReported(scope: String) {
+        let assignment = "TITLE: ${{ github.event.pull_request.title }}"
+        var yaml = cleanWorkflow + "\n      - run: echo \"${{ env.title }}\"\n"
+        switch scope {
+        case "step": yaml = cleanWorkflow + "\n      - env:\n          \(assignment)\n        run: echo \"${{ env.TITLE }}\"\n"
+        case "job": yaml = yaml.replacingOccurrences(of: "    env:\n", with: "    env:\n      \(assignment)\n")
+        default: yaml = "env:\n  \(assignment)\n" + yaml
+        }
+        let finding = lint(yaml).first { $0.rule == .untrustedInputInScript }
+        #expect(finding?.message.contains("is set from `github.event.pull_request.title`") == true)
+    }
+
+    @Test func envExpressionsWithTrustedValuesPass() {
+        let yaml = "env:\n  TITLE: ${{ github.event.pull_request.title }}\n" + cleanWorkflow + """
+
+              - env:
+                  TITLE: fixed text
+                  SHA: ${{ github.sha }}
+                run: echo "${{ env.TITLE }} ${{ env.SHA }} ${{ env.MISSING }}"
+        """
+        #expect(!rules(yaml).contains(.untrustedInputInScript))
+        #expect(rules("env:\n  T: ${{ github.head_ref }}\n" + cleanWorkflow + "\n      - run: echo '${{ toJSON(env) }}'\n")
+            .contains(.untrustedInputInScript))
+    }
+
     @Test func githubScriptIsCheckedForInjection() {
         let yaml = cleanWorkflow + """
 
