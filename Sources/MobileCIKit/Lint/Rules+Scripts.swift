@@ -59,7 +59,10 @@ extension Rules {
     /// The first build tool in `line` that is followed by a `|` pipe (not `||`).
     static func pipedTool(in line: String) -> String? {
         let code = line.split(separator: "#", maxSplits: 1, omittingEmptySubsequences: false).first.map(String.init) ?? line
-        let words = code.split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == ";" || $0 == "(" })
+        // `|` and `&` end a word too, so `xcodebuild|xcpretty` and `cd ios&&xcodebuild` are read
+        // the way the shell reads them.
+        let separators: Set<Character> = [" ", "\t", ";", "(", "|", "&"]
+        let words = code.split(whereSeparator: separators.contains)
         guard let toolWord = words.first(where: { word in
             let name = word.split(separator: "/").last.map(String.init) ?? String(word)
             return buildTools.contains(name)

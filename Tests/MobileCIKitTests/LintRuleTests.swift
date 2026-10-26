@@ -294,6 +294,11 @@ struct LintRuleTests {
         #expect(Rules.pipedTool(in: "echo done | tee log") == nil)
         #expect(Rules.pipedTool(in: "xcodebuild test # | xcbeautify") == nil)
         #expect(Rules.pipedTool(in: "flutter test |& tee log") == "flutter")
+        #expect(Rules.pipedTool(in: "xcodebuild|xcpretty") == "xcodebuild")
+        #expect(Rules.pipedTool(in: "xcodebuild test|xcbeautify") == "xcodebuild")
+        #expect(Rules.pipedTool(in: "cd ios&&xcodebuild test|xcpretty") == "xcodebuild")
+        #expect(Rules.pipedTool(in: "xcodebuild test||exit 1") == nil)
+        #expect(Rules.pipedTool(in: "./gradlew build 2>&1|tee log") == "gradlew")
     }
 
     @Test func continuationLinesAreJoined() {
