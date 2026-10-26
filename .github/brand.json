@@ -1,0 +1,42 @@
+{
+  "name": "MobileCI",
+  "repository": "muhittincamdali/MobileCI",
+  "tagline": {
+    "en": "Write, check and version the CI of iOS, Flutter and React Native apps."
+  },
+  "tags": {
+    "en": [
+      "iOS · Flutter · React Native",
+      "GitHub Actions",
+      "Swift 6"
+    ]
+  },
+  "motif": "code",
+  "buttons": [
+    "start",
+    "docs",
+    "examples"
+  ],
+  "links": {
+    "docs": "https://muhittincamdali.github.io/MobileCI/documentation/mobilecikit/",
+    "examples": "Examples/"
+  },
+  "languages": [
+    "en",
+    "tr",
+    "zh-CN",
+    "ja",
+    "ko",
+    "es",
+    "de",
+    "fr",
+    "pt-BR",
+    "ru"
+  ],
+  "docc": {
+    "targets": [
+      "MobileCIKit"
+    ]
+  },
+  "socialTheme": "dark"
+}
