@@ -1,0 +1,65 @@
+name: MobileCI lint
+description: Check the GitHub Actions workflows of an iOS, Flutter or React Native app for mobile CI problems and annotate the pull request.
+author: Muhittin Camdali
+branding:
+  icon: check-circle
+  color: blue
+
+inputs:
+  paths:
+    description: Workflow files or folders to check, separated by spaces. Empty checks .github/workflows of the checked-out repository.
+    required: false
+    default: ""
+  format:
+    description: "github (annotations on the pull request), text, json or sarif."
+    required: false
+    default: github
+  fail-on:
+    description: "Fail the step for findings of this severity or higher: error, warning, note or never."
+    required: false
+    default: warning
+  disable:
+    description: Rules to skip, by identifier or name, separated by commas (MCI012,floating-macos-image).
+    required: false
+    default: ""
+  output:
+    description: Write the report to this file instead of the log, for example results.sarif for github/codeql-action/upload-sarif.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    # The tool is built from the action's own checkout, so the version is the one in `uses:`.
+    - name: Cache the MobileCI build
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ github.action_path }}/.build
+        key: mobileci-${{ runner.os }}-${{ runner.arch }}-${{ github.action_ref }}
+
+    - name: Build MobileCI
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+      run: swift build --package-path "$ACTION_PATH" --configuration release --product mobileci
+
+    - name: Lint the workflows
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        PATHS: ${{ inputs.paths }}
+        FORMAT: ${{ inputs.format }}
+        FAIL_ON: ${{ inputs.fail-on }}
+        DISABLE: ${{ inputs.disable }}
+        OUTPUT: ${{ inputs.output }}
+      run: |
+        arguments=(lint --format "$FORMAT" --fail-on "$FAIL_ON")
+        if [[ -n "$DISABLE" ]]; then
+          arguments+=(--disable "$DISABLE")
+        fi
+        read -r -a paths <<< "$PATHS"
+        if [[ -n "$OUTPUT" ]]; then
+          "$ACTION_PATH/.build/release/mobileci" "${arguments[@]}" "${paths[@]}" > "$OUTPUT"
+        else
+          "$ACTION_PATH/.build/release/mobileci" "${arguments[@]}" "${paths[@]}"
+        fi
