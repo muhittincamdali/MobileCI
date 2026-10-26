@@ -4,10 +4,12 @@ extension Rules {
     // MARK: MCI008, MCI011, MCI015
 
     static func checkScripts(_ context: inout RuleContext) {
+        // GitHub takes `env.NAME` from the step, then the job, then the workflow.
+        let workflowEnvironment = EnvironmentTaint(scope: context.workflow.env, over: .empty, readsOuter: false)
         for job in context.workflow.jobs {
+            let jobEnvironment = EnvironmentTaint(scope: job.env, over: workflowEnvironment, readsOuter: true)
             for step in job.steps {
-                // GitHub takes `env.NAME` from the step, then the job, then the workflow.
-                let environment = [step.env, job.env, context.workflow.env]
+                let environment = EnvironmentTaint(scope: step.env, over: jobEnvironment, readsOuter: true)
                 if let run = step.run, let script = run.string {
                     checkExpressions(in: script, at: run.location, isScript: true, environment: environment, &context)
                     checkPipes(in: script, at: run.location, shell: shell(of: step, in: job, context.workflow), &context)
@@ -20,7 +22,7 @@ extension Rules {
     }
 
     private static func checkExpressions(in script: String, at start: SourceLocation, isScript: Bool,
-                                         environment: [YAMLValue?], _ context: inout RuleContext) {
+                                         environment: EnvironmentTaint, _ context: inout RuleContext) {
         for occurrence in Expressions.occurrences(in: script) {
             let location = SourceLocation(line: start.line + occurrence.lineOffset, column: start.column)
             for path in Expressions.propertyPaths(in: occurrence.body) {
@@ -28,7 +30,7 @@ extension Rules {
                     let shown = quoted(path, allowed: propertyPathCharacters, fallback: "an event property")
                     context.report(.untrustedInputInScript, at: location,
                                    "The script expands \(shown), text that anyone opening a pull request or issue can choose; pass it through `env:` and quote the variable.")
-                } else if let source = untrustedSource(of: path, in: environment) {
+                } else if let source = environment.untrustedSource(of: path) {
                     let shown = quoted(path, allowed: propertyPathCharacters, fallback: "an environment variable")
                     let origin = quoted(source, allowed: propertyPathCharacters, fallback: "an event property")
                     context.report(.untrustedInputInScript, at: location,
@@ -40,41 +42,6 @@ extension Rules {
                 }
             }
         }
-    }
-
-    /// The untrusted property that the `env.NAME` path (or the whole `env` context) is set from,
-    /// in the first of `scopes` (step, job, workflow `env:`) that defines the name. A value that
-    /// reads `env` again (`B: ${{ env.A }}`) is followed into the scopes after its own, the ones
-    /// GitHub evaluates it against, so every hop moves outwards and the search ends.
-    static func untrustedSource(of path: String, in scopes: [YAMLValue?]) -> String? {
-        untrustedSource(of: path, in: scopes[...])
-    }
-
-    private static func untrustedSource(of path: String, in scopes: ArraySlice<YAMLValue?>) -> String? {
-        let segments = path.lowercased().split(separator: ".", omittingEmptySubsequences: false)
-        guard segments.first == "env" else { return nil }
-        for index in scopes.indices {
-            let outer = scopes[(index + 1)...]
-            let members = scopes[index]?.members ?? []
-            guard segments.count > 1 else {
-                if let source = members.lazy.compactMap({ untrustedSource(in: $0.value, outer: outer) }).first { return source }
-                continue
-            }
-            guard let member = members.first(where: { $0.key.lowercased() == segments[1] }) else { continue }
-            return untrustedSource(in: member.value, outer: outer)
-        }
-        return nil
-    }
-
-    private static func untrustedSource(in value: YAMLValue, outer: ArraySlice<YAMLValue?>) -> String? {
-        guard let text = value.string else { return nil }
-        for occurrence in Expressions.occurrences(in: text) {
-            for path in Expressions.propertyPaths(in: occurrence.body) {
-                if UntrustedInput.isUntrusted(path) { return path }
-                if let source = untrustedSource(of: path, in: outer) { return source }
-            }
-        }
-        return nil
     }
 
     /// The shell GitHub uses for a step: the step's `shell`, then the job's and the workflow's

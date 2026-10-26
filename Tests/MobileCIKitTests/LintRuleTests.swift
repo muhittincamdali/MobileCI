@@ -256,6 +256,24 @@ struct LintRuleTests {
         #expect(!rules(yaml).contains(.untrustedInputInScript))
     }
 
+    /// Every `env:` value in three scopes reads the whole `env` context. Each scope is worked out
+    /// once, so a pull request that adds such a file cannot hold the lint step until its job
+    /// times out; following the values again for every member took minutes at 300 per scope.
+    @Test func envValuesThatReadEnvAgainStayFast() {
+        let count = 1000
+        func members(_ prefix: String, indent: String) -> String {
+            (0..<count).map { "\(indent)\(prefix)\($0): ${{ toJSON(env) }}\n" }.joined()
+        }
+        let yaml = "env:\n  T: ${{ github.head_ref }}\n" + members("W", indent: "  ")
+            + cleanWorkflow.replacingOccurrences(of: "    env:\n", with: "    env:\n" + members("J", indent: "      "))
+            + "\n      - env:\n" + members("S", indent: "          ")
+            + "        run: echo \"${{ env.S\(count - 1) }}\"\n"
+        var found: Set<RuleID> = []
+        let elapsed = ContinuousClock().measure { found = rules(yaml) }
+        #expect(found.contains(.untrustedInputInScript))
+        #expect(elapsed < .seconds(10))
+    }
+
     @Test func envExpressionsWithTrustedValuesPass() {
         let yaml = "env:\n  TITLE: ${{ github.event.pull_request.title }}\n" + cleanWorkflow + """
 
