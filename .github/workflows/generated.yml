@@ -1,0 +1,53 @@
+# Repository-specific: keeps the generated workflows, the templates and the action honest.
+name: Generated workflows
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: generated-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  templates:
+    name: Templates match the generator
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build mobileci
+        run: swift build --configuration release --product mobileci
+
+      - name: Compare Templates/ and the example workflows with mobileci init
+        run: scripts/generate-workflows.sh --check .build/release/mobileci
+
+      - name: Check them with actionlint
+        run: |
+          go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12 \
+            Templates/*.yml .github/workflows/*.yml
+
+  action:
+    name: MobileCI action on this repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Lint the workflows and templates with the action
+        uses: ./
+        with:
+          paths: .github/workflows Templates
