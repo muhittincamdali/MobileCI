@@ -19,6 +19,10 @@ let package = Package(
             dependencies: [
                 .product(name: "Yams", package: "Yams")
             ]
+        ),
+        .testTarget(
+            name: "MobileCIKitTests",
+            dependencies: ["MobileCIKit"]
         )
     ]
 )
