@@ -11,7 +11,10 @@ public enum VersionError: Error, Equatable, Sendable, CustomStringConvertible {
     case invalidBuildNumber(String)
     /// The files hold build numbers, but none is digits only, so there is nothing to increment.
     case unreadableBuildNumber(String)
+    /// A build number above Google Play's `versionCode` limit.
     case tooLarge(String, limit: Int)
+    /// A bump that would take one part of a version past ``MarketingVersion/maximumComponent``.
+    case versionPartTooLarge(String, limit: Int)
     case nothingToChange(String)
 
     public var description: String {
@@ -25,6 +28,8 @@ public enum VersionError: Error, Equatable, Sendable, CustomStringConvertible {
                 + "Set one with `mobileci version build <number>`."
         case .tooLarge(let text, let limit):
             return "\(text.sanitizedForTerminal.truncated(to: 60)) is larger than \(limit), the largest value Google Play accepts as a version code."
+        case .versionPartTooLarge(let text, let limit):
+            return "\(text.sanitizedForTerminal.truncated(to: 60)) cannot be bumped: each part of a version is at most \(limit)."
         case .nothingToChange(let reason):
             return reason
         }
@@ -84,7 +89,7 @@ public struct MarketingVersion: Sendable, Equatable, Comparable, CustomStringCon
         var next = components
         while next.count <= index { next.append(0) }
         guard next[index] < Self.maximumComponent else {
-            throw .tooLarge(description, limit: Self.maximumComponent)
+            throw .versionPartTooLarge(description, limit: Self.maximumComponent)
         }
         next[index] += 1
         for later in next.indices where later > index { next[later] = 0 }

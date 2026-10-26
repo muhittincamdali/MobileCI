@@ -16,9 +16,12 @@ struct VersionNumberTests {
     @Test func refusesComponentsThatWouldOverflow() {
         #expect(throws: VersionError.self) { try MarketingVersion("1.99999999999999999999.0") }
         #expect(throws: VersionError.self) { try MarketingVersion("1000000000.0.0") }
-        #expect(throws: VersionError.tooLarge("999999999.0.0", limit: 999_999_999)) {
+        #expect(throws: VersionError.versionPartTooLarge("999999999.0.0", limit: 999_999_999)) {
             try MarketingVersion("999999999.0.0").bumped(.major)
         }
+        let message = VersionError.versionPartTooLarge("1.999999999", limit: MarketingVersion.maximumComponent).description
+        #expect(message == "1.999999999 cannot be bumped: each part of a version is at most 999999999.")
+        #expect(!message.contains("Google Play"))
     }
 
     @Test func bumps() throws {
