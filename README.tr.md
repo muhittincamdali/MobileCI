@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@67cfc454ddfa4fddc18761183ca2883266d9be65 status=reviewed -->
+<!-- i18n-source: README.md@dd2916d8ed7ec53bff38f4304ac420eb57e36ab0 status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg" alt="MobileCI: Write, check and version the CI of iOS, Flutter and React Native apps."></picture></p>
@@ -51,7 +51,7 @@ Xcode, Flutter, Gradle ve Expo dosyalarında birbiriyle uyumlu tutar. Her runner
 - **Güvenilmeyen depolarda güvenli** — dosyalar boyut sınırıyla okunur, YAML alias'ları ve iç
   içe geçme sınırlıdır, `detect` sembolik bağlantılı klasörlere inmez, mesajlar dosya
   içeriğinden alıntı yapmaz ve annotation çıktısı workflow komutu enjekte edemez.
-- **Test edilmiş ve kendi üzerinde denenmiş** — 119 Swift Testing testi macOS'ta ve bir
+- **Test edilmiş ve kendi üzerinde denenmiş** — 121 Swift Testing testi macOS'ta ve bir
   iPhone simülatöründe çalışır; bu deponun örneklerindeki iOS ve Flutter workflow'ları
   `mobileci init` ile yazılır ve üreticiden saptıklarında bir CI işi başarısız olur.
 

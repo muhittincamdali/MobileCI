@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@67cfc454ddfa4fddc18761183ca2883266d9be65 status=reviewed -->
+<!-- i18n-source: README.md@dd2916d8ed7ec53bff38f4304ac420eb57e36ab0 status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg" alt="MobileCI: Write, check and version the CI of iOS, Flutter and React Native apps."></picture></p>
@@ -34,7 +34,7 @@ MobileCI 是一个命令行工具、一个 GitHub Action 和一个 Swift 库，�
 - **16 条移动端 workflow lint 规则** — `macos-latest` 漂移、缺少 Xcode 选择、被 `| xcbeautify` 掩盖的测试失败、缺少超时、未固定的 action、通过 pull request 标题进行的脚本注入，以及 `pull_request_target` checkout；输出支持文本、JSON、GitHub annotation 和 SARIF 格式。
 - **一条版本命令** — `mobileci version bump patch --build` 会同时更新 `MARKETING_VERSION`、`pubspec.yaml`、`package.json`、`app.json` 和 `build.gradle`，并且会拒绝超过 Google Play 上限的构建号，而不是让它溢出。
 - **对不受信任的仓库也安全** — 读取文件时有大小限制，YAML 别名和嵌套层数有上限，`detect` 不会进入符号链接指向的文件夹，消息从不引用文件内容，annotation 输出也无法注入 workflow 命令。
-- **经过测试并自用验证** — 119 个 Swift Testing 测试在 macOS 和 iPhone 模拟器上运行；本仓库示例中的 iOS 和 Flutter workflow 由 `mobileci init` 生成，一旦它们与生成器的输出不一致，就会有一个 CI 任务失败。
+- **经过测试并自用验证** — 121 个 Swift Testing 测试在 macOS 和 iPhone 模拟器上运行；本仓库示例中的 iOS 和 Flutter workflow 由 `mobileci init` 生成，一旦它们与生成器的输出不一致，就会有一个 CI 任务失败。
 
 ## 快速开始
 
