@@ -1,578 +1,286 @@
-<p align="center">
-  <img src="https://img.shields.io/badge/Swift-6.0-FA7343?style=for-the-badge&logo=swift&logoColor=white" alt="Swift 6.0"/>
-  <img src="https://img.shields.io/badge/Platform-iOS%20|%20macOS%20|%20visionOS-007AFF?style=for-the-badge&logo=apple&logoColor=white" alt="Platform"/>
-  <img src="https://img.shields.io/badge/Standard-Unified%20Core-5856D6?style=for-the-badge" alt="Standard"/>
-</p>
+<!-- brand:start -->
 
----
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg" alt="MobileCI: Write, check and version the CI of iOS, Flutter and React Native apps."></picture></p>
 
-> **🛡️ PART OF THE 2026 UNIFIED CORE**
-> This repository is a verified component of 'The Endless March' initiative. Purified for Swift 6, zero-dependency, and engineered for maximum hardware saturation.
-> 
-> *Flagship Engines:* [SwiftNetwork](https://github.com/muhittincamdali/SwiftNetwork) | [SwiftAI](https://github.com/muhittincamdali/SwiftAI) | [LiquidGlassKit](https://github.com/muhittincamdali/LiquidGlassKit)
-
----
-
-<h1 align="center">MobileCI</h1>
+<!-- lang-selector:start -->
+<p align="center"><a href="README.md">English</a> · <a href="README.tr.md">Türkçe</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.ja.md">日本語</a> · <a href="README.ko.md">한국어</a> · <a href="README.es.md">Español</a> · <a href="README.de.md">Deutsch</a> · <a href="README.fr.md">Français</a> · <a href="README.pt-BR.md">Português (Brasil)</a> · <a href="README.ru.md">Русский</a></p>
+<!-- lang-selector:end -->
 
 <p align="center">
-  <strong>🚀 The Ultimate Swift-Based CI/CD Toolkit for Mobile Applications</strong>
+<a href="https://github.com/muhittincamdali/MobileCI/actions/workflows/ci.yml"><img src="https://github.com/muhittincamdali/MobileCI/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
+<a href="https://github.com/muhittincamdali/MobileCI/releases"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/badge-version-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/badge-version-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/badge-version-light.svg" alt="Latest version: v1.0.0"></picture></a>
+<a href="https://github.com/muhittincamdali/MobileCI/blob/main/Package.swift"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/badge-platforms-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/badge-platforms-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/badge-platforms-light.svg" alt="Supported platforms: macOS 14+ · iOS 17+"></picture></a>
+<a href="https://github.com/muhittincamdali/MobileCI/blob/main/Package.swift"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/badge-language-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/badge-language-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/badge-language-light.svg" alt="Language version: Swift 6.2+"></picture></a>
+<a href="https://github.com/muhittincamdali/MobileCI/blob/main/LICENSE"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/badge-license-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/badge-license-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/badge-license-light.svg" alt="License: MIT"></picture></a>
 </p>
 
 <p align="center">
-  <em>A modern, zero-config, type-safe alternative to Fastlane — built entirely in Swift</em>
+<a href="#quick-start"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/button-start-en-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/button-start-en-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/button-start-en-light.svg" alt="Get started"></picture></a>
+<a href="https://muhittincamdali.github.io/MobileCI/documentation/mobilecikit/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/button-docs-en-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/button-docs-en-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/button-docs-en-light.svg" alt="Documentation"></picture></a>
+<a href="https://github.com/muhittincamdali/MobileCI/tree/main/Examples"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/button-examples-en-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/button-examples-en-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/button-examples-en-light.svg" alt="Examples"></picture></a>
 </p>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Swift-5.9+-orange.svg?style=flat-square" alt="Swift 5.9+"/>
-  <img src="https://img.shields.io/badge/Platforms-iOS%20|%20macOS%20|%20watchOS%20|%20tvOS%20|%20visionOS-blue.svg?style=flat-square" alt="Platforms"/>
-  <img src="https://img.shields.io/badge/SPM-Compatible-brightgreen.svg?style=flat-square" alt="SPM Compatible"/>
-  <img src="https://img.shields.io/github/license/muhittincamdali/MobileCI?style=flat-square" alt="License"/>
-  <img src="https://img.shields.io/github/v/release/muhittincamdali/MobileCI?style=flat-square" alt="Release"/>
-</p>
+<!-- brand:end -->
 
-<p align="center">
-  <a href="#features">Features</a> •
-  <a href="#installation">Installation</a> •
-  <a href="#quick-start">Quick Start</a> •
-  <a href="#commands">Commands</a> •
-  <a href="#ci-integration">CI Integration</a> •
-  <a href="#documentation">Documentation</a> •
-  <a href="docs/BENCHMARKS.md">Benchmarks</a> •
-  <a href="ROADMAP.md">Roadmap</a>
-</p>
+MobileCI is a command-line tool, a GitHub Action and a Swift library for the CI of iOS,
+Flutter and React Native apps. It reads your repository, writes a GitHub Actions workflow that
+builds and tests each app on the current runner images, checks existing workflows for the
+mistakes that make mobile CI slow, expensive or unsafe, and keeps the app's version and build
+number in step across Xcode, Flutter, Gradle and Expo files. It is for app developers who want
+a working pipeline without learning every runner detail first.
 
----
+## Highlights
 
-## Why MobileCI?
+- **Detects what CI will see** — Xcode projects and their shared schemes, CocoaPods and Swift
+  package use, Flutter platform folders, the package manager of a React Native or Expo app,
+  and the problems a first run trips over, such as a scheme that is not shared.
+- **Writes current, pinned workflows** — every action pinned to its release commit,
+  `macos-26` with Xcode 26.6 selected, `contents: read` permissions, timeouts, caches and
+  cancelled superseded runs; each generated file passes the tool's own lint and actionlint.
+- **16 lint rules for mobile workflows** — `macos-latest` drift, a missing Xcode selection,
+  test failures hidden behind `| xcbeautify`, missing timeouts, unpinned actions, script
+  injection from pull request titles and `pull_request_target` checkouts, with text, JSON,
+  GitHub annotation and SARIF output.
+- **One version command** — `mobileci version bump patch --build` updates
+  `MARKETING_VERSION`, `pubspec.yaml`, `package.json`, `app.json` and `build.gradle`
+  together, and refuses build numbers above Google Play's limit instead of overflowing.
+- **Safe on untrusted repositories** — files are read with size limits, YAML aliases and
+  nesting are bounded, symbolic links are never followed, messages never quote file content,
+  and annotation output cannot inject workflow commands.
+- **Tested and dogfooded** — 108 Swift Testing tests run on macOS and an iPhone simulator;
+  the iOS and Flutter workflows of this repository's examples are written by `mobileci init`
+  and a CI job fails when they drift from the generator.
 
-| Feature | MobileCI | Fastlane | Bitrise |
-|---------|----------|----------|---------|
-| **Language** | Swift 🧡 | Ruby 💎 | YAML |
-| **Type Safety** | ✅ Full | ❌ None | ❌ None |
-| **Zero Config** | ✅ Auto-detect | ❌ Manual | ❌ Manual |
-| **Async/Await** | ✅ Native | ❌ N/A | ❌ N/A |
-| **IDE Support** | ✅ Xcode | ⚠️ Limited | ❌ None |
-| **Self-Hosted** | ✅ Yes | ✅ Yes | ❌ No |
-| **Speed** | ⚡️ Fast | 🐢 Slow | 🚗 Medium |
-| **Learning Curve** | 📈 Low | 📉 High | 📊 Medium |
+## Quick start
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                                                                 │
-│   ███╗   ███╗ ██████╗ ██████╗ ██╗██╗     ███████╗ ██████╗██╗   │
-│   ████╗ ████║██╔═══██╗██╔══██╗██║██║     ██╔════╝██╔════╝██║   │
-│   ██╔████╔██║██║   ██║██████╔╝██║██║     █████╗  ██║     ██║   │
-│   ██║╚██╔╝██║██║   ██║██╔══██╗██║██║     ██╔══╝  ██║     ██║   │
-│   ██║ ╚═╝ ██║╚██████╔╝██████╔╝██║███████╗███████╗╚██████╗██║   │
-│   ╚═╝     ╚═╝ ╚═════╝ ╚═════╝ ╚═╝╚══════╝╚══════╝ ╚═════╝╚═╝   │
-│                                                                 │
-│   The Swift CI/CD Revolution for Mobile Development            │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+**1. Install the tool**
+
+```sh
+git clone https://github.com/muhittincamdali/MobileCI.git
+cd MobileCI
+swift build --configuration release --product mobileci
+sudo install .build/release/mobileci /usr/local/bin/mobileci
 ```
 
-## 🚀 The 2026 Standard GitHub Action
-Stop maintaining complex, brittle Fastlane scripts. Use our world-class, plug-and-play GitHub Action to enforce Swift 6 purity and zero-bloat standards automatically.
+**2. Write a workflow for your app**
 
-```yaml
-name: CI
-on: [push, pull_request]
+In the root of your app's repository:
 
-jobs:
-  build:
-    runs-on: macos-14
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Elite Swift 6 CI
-        uses: muhittincamdali/MobileCI@v1
-        with:
-          strict-concurrency: 'true'
-          binary-size-check: 'true'
+```sh
+mobileci detect   # what CI will see
+mobileci init     # writes .github/workflows/ios.yml, flutter.yml or react-native.yml
 ```
 
-## 🚀 Killer Feature: The 2026 Standard
-This repository has been upgraded to the absolute global #1 standard in its category.
+**3. Check it and push**
 
-## ✨ Features
-
-### 🔧 Build Automation
-- **Auto-detection** of Xcode projects, workspaces, and schemes
-- **Multi-platform** support: iOS, macOS, watchOS, tvOS, visionOS
-- **Parallel builds** with intelligent dependency resolution
-- **Incremental builds** with smart caching
-- **Archive & Export** with automatic signing
-
-### 🧪 Test Automation
-- **Parallel testing** across multiple simulators
-- **Test coverage** with xcresult bundle support
-- **Snapshot testing** integration
-- **Performance testing** benchmarks
-- **UI testing** with screenshot comparison
-
-### 🔐 Code Signing Management
-- **Automatic provisioning** profile installation
-- **Certificate management** with secure keychain handling
-- **CI-optimized** signing setup (ephemeral keychains)
-- **Match-compatible** profile organization
-- **Certificate expiration** monitoring
-
-### 🚀 Deployment
-- **TestFlight** with automatic changelog
-- **App Store** with metadata submission
-- **Firebase App Distribution** with tester groups
-- **App Center** with release notes
-- **Custom** webhook-based deployment
-
-### 📊 Version Management
-- **Semantic versioning** with auto-bump
-- **Build number** strategies (increment, date-based, git-count)
-- **Multi-platform sync** (iOS, Android, Flutter)
-- **Git tagging** with release automation
-
-### 📝 Changelog Generation
-- **Conventional commits** parsing
-- **Keep-a-changelog** format
-- **Release notes** for app stores
-- **Slack/Teams** notifications
-- **Multi-format** output (markdown, JSON, HTML)
-
-### 🔌 CI Integration
-- **GitHub Actions** workflow generator
-- **GitLab CI** pipeline templates
-- **Bitrise** YAML configuration
-- **CircleCI** orb-compatible
-- **Jenkins** pipeline support
-- **Azure Pipelines** YAML
-
----
+```sh
+mobileci lint
+git add .github/workflows && git commit -m "ci: build and test on GitHub Actions" && git push
+```
 
 ## Installation
 
-### Homebrew (Recommended)
+### Command-line tool
 
-```bash
-brew install muhittincamdali/tap/mobileci
+Build it from source as in the quick start; the result is a single executable. It runs on
+macOS 14 or later and on Linux with Swift 6.2 or later.
+
+### GitHub Action
+
+The action builds the tool on the runner and lints the repository's workflows; findings appear
+as annotations on the pull request:
+
+```yaml
+jobs:
+  workflows:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: muhittincamdali/MobileCI@main # pin to a release commit, as MCI001 asks
+        with:
+          fail-on: warning
 ```
 
-### Swift Package Manager
+Inputs: `paths`, `format` (`github`, `text`, `json`, `sarif`), `fail-on`, `disable` and
+`output` ([action.yml](action.yml)).
 
-Add to your `Package.swift`:
+### Swift package
+
+In Xcode, choose **File › Add Package Dependencies…** and enter the repository URL:
+
+```text
+https://github.com/muhittincamdali/MobileCI.git
+```
+
+Or add it to the `dependencies` in your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/muhittincamdali/MobileCI.git", from: "2.0.0")
+    .package(url: "https://github.com/muhittincamdali/MobileCI.git", branch: "main")
+],
+targets: [
+    .target(name: "YourTool", dependencies: [
+        .product(name: "MobileCIKit", package: "MobileCI")
+    ])
 ]
 ```
 
-### Manual Installation
+## Usage
 
-```bash
-git clone https://github.com/muhittincamdali/MobileCI.git
-cd MobileCI
-swift build -c release
-cp .build/release/mobileci /usr/local/bin/
-```
+### See what CI will see
 
-### Mint
+`mobileci detect` lists each project with the details its workflow uses, and notes what to fix
+first:
 
-```bash
-mint install muhittincamdali/MobileCI
-```
+![mobileci detect](docs/images/terminal-detect-light.png)
 
----
+### Check an existing workflow
 
-## Quick Start
+`mobileci lint` checks every file in `.github/workflows` and exits with status 1 when a
+finding reaches `--fail-on` (warning by default). This is the kind of first workflow many
+apps start with:
 
-### 1. Initialize Project
+![mobileci lint on a first iOS workflow](docs/images/terminal-lint-light.png)
 
-```bash
-# Auto-detect and setup your project
-mobileci init
-
-# Or specify platform
-mobileci init --platform ios --template standard
-```
-
-### 2. Build
-
-```bash
-# Auto-detect scheme and build
-mobileci build
-
-# Specify options
-mobileci build --platform ios --scheme MyApp --configuration Release
-```
-
-### 3. Test
-
-```bash
-# Run tests with coverage
-mobileci test --coverage
-
-# Parallel testing on multiple simulators
-mobileci test --parallel --simulators "iPhone 15 Pro,iPhone 15"
-```
-
-### 4. Deploy
-
-```bash
-# Deploy to TestFlight
-mobileci deploy --target testflight
-
-# Deploy to App Store with submission
-mobileci deploy --target appstore --submit-review
-
-# Deploy to Firebase
-mobileci deploy --target firebase --groups testers
-```
-
----
-
-## Commands
-
-### Build
-
-```bash
-mobileci build [OPTIONS]
-
-Options:
-  --platform <platform>       Target platform (ios, macos, android, flutter)
-  --scheme <scheme>           Xcode scheme to build
-  --configuration <config>    Build configuration (debug, release)
-  --archive                   Create an archive
-  --export                    Export IPA after archive
-  --export-method <method>    Export method (app-store, ad-hoc, enterprise)
-  --clean                     Clean before building
-  --verbose                   Enable verbose output
-```
-
-### Test
-
-```bash
-mobileci test [OPTIONS]
-
-Options:
-  --platform <platform>       Target platform
-  --scheme <scheme>           Test scheme
-  --coverage                  Generate code coverage
-  --parallel                  Enable parallel testing
-  --simulators <list>         Comma-separated simulator names
-  --output <path>             Output path for results
-```
-
-### Deploy
-
-```bash
-mobileci deploy [OPTIONS]
-
-Options:
-  --target <target>           Deployment target (testflight, appstore, firebase)
-  --ipa <path>                Path to IPA file
-  --notes <notes>             Release notes
-  --notes-file <path>         Path to release notes file
-  --groups <groups>           Beta groups (comma-separated)
-  --submit-beta-review        Submit for beta review
-  --submit-review             Submit for App Store review
-  --generate-changelog        Generate changelog from commits
-```
-
-### Version
-
-```bash
-mobileci version-bump [OPTIONS]
-
-Options:
-  --bump <type>               Bump type (major, minor, patch)
-  --set <version>             Set specific version
-  --build-number <strategy>   Build number strategy (increment, datetime)
-  --tag                       Create git tag
-  --push                      Push tag to remote
-```
-
-### Init
-
-```bash
-mobileci init [OPTIONS]
-
-Options:
-  --platform <platform>       Target platform
-  --template <template>       Template name (standard, enterprise, open-source)
-  --ci <provider>             Generate CI workflow (github, gitlab, bitrise)
-```
-
-### Doctor
-
-```bash
-mobileci doctor
-
-# Checks:
-# ✅ Xcode installation
-# ✅ Swift version
-# ✅ CocoaPods / SPM
-# ✅ Code signing certificates
-# ✅ Provisioning profiles
-# ✅ CI environment
-```
-
----
-
-## CI Integration
-
-### GitHub Actions
+`mobileci rules` lists each rule with its fix; the
+[rule reference](https://muhittincamdali.github.io/MobileCI/documentation/mobilecikit/lintrules)
+explains why each one matters. Silence a rule where it does not apply with a comment on the
+line or the line above:
 
 ```yaml
-# .github/workflows/ios.yml
-name: iOS CI
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-jobs:
-  build:
-    runs-on: macos-14
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup MobileCI
-        run: brew install muhittincamdali/tap/mobileci
-      
-      - name: Build
-        run: mobileci build --configuration Release
-      
-      - name: Test
-        run: mobileci test --coverage
-      
-      - name: Deploy
-        if: github.ref == 'refs/heads/main'
-        env:
-          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          ASC_KEY_CONTENT: ${{ secrets.ASC_KEY_CONTENT }}
-        run: mobileci deploy --target testflight --generate-changelog
+- uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+  # mobileci-ignore MCI012: the release job pushes the version tag with this token
 ```
 
-### Generate CI Config
+### Write a workflow
 
-```bash
-# Generate GitHub Actions workflow
-mobileci init --ci github
+`mobileci init` writes one file per project; `--stdout` prints instead, and options such as
+`--xcode 26.4.1`, `--simulator "iPhone 17 Pro"` or `--scheme` change the values:
 
-# Generate GitLab CI
-mobileci init --ci gitlab
+![mobileci init and a clean lint](docs/images/terminal-init-light.png)
 
-# Generate all CI configs
-mobileci init --ci all
+The generated workflow passes every rule:
+
+![mobileci lint on the generated workflow](docs/images/terminal-lint-generated-light.png)
+
+The [Templates](Templates) folder holds the output for one sample project of each kind: an
+[iOS app](Templates/ios.yml), an [iOS app with CocoaPods](Templates/ios-cocoapods.yml), a
+[macOS app](Templates/macos.yml), a [Swift package](Templates/swift-package.yml), a
+[Flutter app](Templates/flutter.yml), a [React Native app](Templates/react-native.yml) and an
+[Expo app](Templates/expo.yml). Copy one if you prefer not to install the tool.
+
+### Bump the version
+
+![mobileci version bump](docs/images/terminal-version-light.png)
+
+`mobileci version` lists every version and build number it finds; `bump`, `set` and `build`
+change them in all files at once, and `--dry-run` shows the result without writing.
+
+### Lint from Swift
+
+The [example app](Examples/WorkflowCheck/WorkflowCheck/CheckModel.swift) checks a workflow
+on an iPhone with this call:
+
+```swift
+static func check(_ text: String) -> [Finding] {
+    WorkflowLinter().lint(text: text, path: "workflow.yml")
+}
 ```
 
----
+and shows the workflow `mobileci init` would write for it
+([Samples.swift](Examples/WorkflowCheck/WorkflowCheck/Samples.swift)):
 
-## Configuration
-
-### mobileci.yml
-
-```yaml
-# mobileci.yml
-project:
-  name: MyApp
-  platform: ios
-  workspace: MyApp.xcworkspace
-  scheme: MyApp
-
-build:
-  configuration: Release
-  clean: true
-  derived_data_path: .build/DerivedData
-
-test:
-  coverage: true
-  parallel: true
-  destinations:
-    - platform=iOS Simulator,name=iPhone 15 Pro
-
-signing:
-  team_id: ${TEAM_ID}
-  export_method: app-store
-  
-deploy:
-  testflight:
-    changelog: git
-    groups:
-      - internal-testers
-      - beta-testers
+```swift
+let project = DetectedProject(directory: ".", kind: .xcode(XcodeProject(
+    projectFile: "WorkflowCheck.xcodeproj",
+    workspaceFile: nil,
+    schemes: [XcodeScheme(name: "WorkflowCheck", hasTests: true)],
+    platform: .iOS,
+    usesCocoaPods: false,
+    usesBundler: false,
+    usesSwiftPackages: false
+)))
+return try WorkflowGenerator().workflow(for: project).contents
 ```
 
-### Environment Variables
+## Demo
 
-| Variable | Description |
-|----------|-------------|
-| `ASC_KEY_ID` | App Store Connect API Key ID |
-| `ASC_ISSUER_ID` | App Store Connect Issuer ID |
-| `ASC_KEY_CONTENT` | App Store Connect Private Key (base64) |
-| `P12_CERTIFICATE` | Code signing certificate (base64) |
-| `P12_PASSWORD` | Certificate password |
-| `TEAM_ID` | Apple Developer Team ID |
-| `FIREBASE_APP_ID` | Firebase App ID |
-| `APPCENTER_TOKEN` | App Center API token |
+The example app lints the sample workflows with MobileCIKit on an iPhone simulator, captured
+by [`scripts/capture-example-screens.sh`](scripts/capture-example-screens.sh):
 
----
+| A first iOS workflow                                                  | Written by `WorkflowGenerator`                                        |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| ![First workflow, light](docs/images/example-firstWorkflow-light.png) | ![Generated workflow, light](docs/images/example-generated-light.png) |
+| ![First workflow, dark](docs/images/example-firstWorkflow-dark.png)   | ![Generated workflow, dark](docs/images/example-generated-dark.png)   |
+
+The terminal images in the Usage section are real runs of the tool on a sample repository,
+rendered by [`scripts/capture-terminal.sh`](scripts/capture-terminal.sh) (dark versions are in
+[docs/images](docs/images)).
+
+To run the app, open `WorkflowCheck.xcodeproj` in [Examples/WorkflowCheck](Examples/WorkflowCheck)
+with Xcode, choose an iPhone simulator and press **Run**. [Examples/README.md](Examples/README.md)
+also describes the Flutter example.
+
+## Documentation
+
+Reference documentation and articles:
+
+- [MobileCIKit reference](https://muhittincamdali.github.io/MobileCI/documentation/mobilecikit/)
+- [Lint rules](https://muhittincamdali.github.io/MobileCI/documentation/mobilecikit/lintrules)
+- [Limits and safety](https://muhittincamdali.github.io/MobileCI/documentation/mobilecikit/limitsandsafety)
+
+## Guides
+
+- [Getting started](https://muhittincamdali.github.io/MobileCI/documentation/mobilecikit/gettingstarted) — install, detect, init, lint and version, step by step.
+- [Generating workflows](https://muhittincamdali.github.io/MobileCI/documentation/mobilecikit/generatingworkflows) — what each generated job does and every option.
+- [Version management](https://muhittincamdali.github.io/MobileCI/documentation/mobilecikit/versionmanagement) — the files, the rules and the limits.
+
+## Requirements
+
+| Platform                 | Minimum version        |
+| ------------------------ | ---------------------- |
+| macOS (tool and library) | 14                     |
+| iOS (library)            | 17                     |
+| Linux (tool and library) | Swift 6.2 toolchain    |
+| Toolchain                | Swift 6.2+ (Xcode 26+) |
+
+Generated workflows target GitHub's `macos-26` (Xcode 26.6) and `ubuntu-24.04` runners;
+every value can be changed with an option.
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         MobileCI CLI                            │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐           │
-│  │  Build  │  │  Test   │  │ Deploy  │  │ Version │           │
-│  └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘           │
-│       │            │            │            │                  │
-│  ┌────┴────────────┴────────────┴────────────┴────┐            │
-│  │               MobileCIKit Core                  │            │
-│  ├─────────────────────────────────────────────────┤            │
-│  │                                                 │            │
-│  │  ┌──────────────┐  ┌──────────────┐           │            │
-│  │  │ ProcessRunner│  │    Logger    │           │            │
-│  │  └──────────────┘  └──────────────┘           │            │
-│  │                                                 │            │
-│  │  ┌──────────────┐  ┌──────────────┐           │            │
-│  │  │ CodeSigning  │  │  AppStore    │           │            │
-│  │  │   Manager    │  │ ConnectAPI   │           │            │
-│  │  └──────────────┘  └──────────────┘           │            │
-│  │                                                 │            │
-│  │  ┌──────────────┐  ┌──────────────┐           │            │
-│  │  │   Version    │  │  Changelog   │           │            │
-│  │  │   Manager    │  │  Generator   │           │            │
-│  │  └──────────────┘  └──────────────┘           │            │
-│  │                                                 │            │
-│  │  ┌──────────────┐  ┌──────────────┐           │            │
-│  │  │ CI Workflow  │  │   Config     │           │            │
-│  │  │  Generator   │  │   Parser     │           │            │
-│  │  └──────────────┘  └──────────────┘           │            │
-│  │                                                 │            │
-│  └─────────────────────────────────────────────────┘            │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+- `Sources/MobileCIKit/Detection` — `ProjectDetector` walks the repository (3 levels, no
+  symbolic links) and reads `.xcodeproj` bundles, `pubspec.yaml`, `package.json` and
+  `Package.swift` as text.
+- `Sources/MobileCIKit/Generation` — `WorkflowGenerator` writes the YAML line by line from
+  validated values; `PinnedAction` holds the action commits.
+- `Sources/MobileCIKit/Lint` — `YAMLValue` keeps the position of every node (parsed with
+  [Yams](https://github.com/jpsim/Yams) on a large-stack thread with node and depth limits),
+  `Workflow` exposes jobs and steps, and one function per rule reports `Finding`s.
+- `Sources/MobileCIKit/Reporting` — text, JSON, GitHub annotation and SARIF output.
+- `Sources/MobileCIKit/Versioning` — `VersionFile` locates version fields and replaces them in
+  place; `VersionManager` plans and applies a change across files.
+- `Sources/mobileci` — the command-line interface
+  ([swift-argument-parser](https://github.com/apple/swift-argument-parser)).
 
----
-
-## Performance
-
-MobileCI is designed for speed:
-
-| Operation | MobileCI | Fastlane |
-|-----------|----------|----------|
-| Cold start | ~0.5s | ~3-5s |
-| Build command | ~0.1s | ~1-2s |
-| Deploy (TestFlight) | ~30s | ~45s |
-| Profile install | ~0.2s | ~1s |
-
----
-
-## Library Usage
-
-Use MobileCI as a library in your Swift projects:
-
-```swift
-import MobileCIKit
-
-// Build
-let buildResult = try await BuildCommand().execute(
-    platform: .ios,
-    scheme: "MyApp",
-    configuration: .release
-)
-
-// Deploy
-let deployResult = try await DeployCommand().execute(
-    target: .testflight,
-    ipa: buildResult.artifactPath!
-)
-
-// Version bump
-let version = VersionManager.shared.bumpVersion(
-    currentVersion: "1.2.3",
-    bumpType: .minor
-)
-
-// Generate changelog
-let changelog = try ChangelogGenerator.shared.generateChangelog(
-    version: version,
-    format: .releaseNotes
-)
-```
-
----
+[`scripts/generate-workflows.sh`](scripts/generate-workflows.sh) regenerates `Templates/` and
+the example workflows; with `--check` it fails when they differ from the generator's output.
 
 ## Roadmap
 
-- [x] Build automation
-- [x] Test automation
-- [x] Code signing management
-- [x] TestFlight deployment
-- [x] App Store deployment
-- [x] Version bumping
-- [x] Changelog generation
-- [x] CI workflow generation
-- [ ] Screenshot automation
-- [ ] Localization sync
-- [ ] App Store metadata management
-- [ ] macOS notarization
-- [ ] watchOS complications
-- [ ] visionOS spatial capture
-
----
+- Prebuilt binaries attached to releases, so the action does not compile the tool on each run.
+- Detection of native Android projects (Gradle without React Native or Flutter).
+- A rule for simulator destinations that do not exist on the selected runner image.
 
 ## Contributing
 
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details.
-
-```bash
-# Clone the repository
-git clone https://github.com/muhittincamdali/MobileCI.git
-cd MobileCI
-
-# Build
-swift build
-
-# Run tests
-swift test
-
-# Run the CLI
-swift run mobileci --help
-```
-
----
+Contributions are welcome. Read the [contributing guide](CONTRIBUTING.md) and the [code of conduct](https://github.com/muhittincamdali/.github/blob/main/CODE_OF_CONDUCT.md) before opening a pull request. Report security issues privately as described in the [security policy](SECURITY.md).
 
 ## License
 
-MobileCI is released under the MIT License. See [LICENSE](LICENSE) for details.
-
----
-
-## Acknowledgements
-
-Built with ❤️ using:
-- [Swift Argument Parser](https://github.com/apple/swift-argument-parser)
-- [Yams](https://github.com/jpsim/Yams)
-- [Rainbow](https://github.com/onevcat/Rainbow)
-- [Swift Log](https://github.com/apple/swift-log)
-- [AsyncHTTPClient](https://github.com/swift-server/async-http-client)
-
----
-
-<p align="center">
-  <strong>Star ⭐ this repo if MobileCI helps your iOS development!</strong>
-</p>
-
-<p align="center">
-  <a href="https://github.com/muhittincamdali/MobileCI/issues">Report Bug</a> •
-  <a href="https://github.com/muhittincamdali/MobileCI/issues">Request Feature</a> •
-  <a href="https://github.com/muhittincamdali/MobileCI/discussions">Discussions</a>
-</p>
+Released under the MIT license. See [LICENSE](LICENSE).
