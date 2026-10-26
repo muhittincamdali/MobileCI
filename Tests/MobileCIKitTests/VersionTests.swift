@@ -223,6 +223,14 @@ struct VersionManagerTests {
         #expect(try VersionManager().plan(.setBuild(BuildNumber("5")), files: [file]).build?.value == 5)
     }
 
+    /// The message names the command that sets a build: `version build` takes the number as
+    /// `--set`, not as an argument.
+    @Test func unreadableBuildNumberMessageNamesTheSetOption() {
+        let message = VersionError.unreadableBuildNumber("1.2.3").description
+        #expect(message.contains("`mobileci version build --set <number>`"))
+        #expect(!message.contains("`mobileci version build <number>`"))
+    }
+
     @Test func swiftPackagesHaveNothingToVersion() {
         #expect(throws: VersionError.self) { try VersionManager().plan(.nextBuild, files: []) }
     }

@@ -130,7 +130,7 @@ struct VersionCommand: ParsableCommand {
     struct Build: ParsableCommand {
         static let configuration = CommandConfiguration(abstract: "Increment the build number, or set it with --set.")
 
-        @Option(name: .customLong("set"), help: "The new build number.")
+        @Option(name: .customLong("set"), help: ArgumentHelp("The new build number.", valueName: "number"))
         var value: String?
 
         @OptionGroup var options: VersionOptions

@@ -25,7 +25,7 @@ public enum VersionError: Error, Equatable, Sendable, CustomStringConvertible {
             return "\(text.sanitizedForTerminal.truncated(to: 60)) is not a build number: use digits only, such as 42."
         case .unreadableBuildNumber(let text):
             return "The build number \(text.sanitizedForTerminal.truncated(to: 60)) cannot be incremented: only digits are read, such as 42. "
-                + "Set one with `mobileci version build <number>`."
+                + "Set one with `mobileci version build --set <number>`."
         case .tooLarge(let text, let limit):
             return "\(text.sanitizedForTerminal.truncated(to: 60)) is larger than \(limit), the largest value Google Play accepts as a version code."
         case .versionPartTooLarge(let text, let limit):
