@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@dc152ebd5673ac18e3cf1c1689e029c5db193284 status=reviewed -->
+<!-- i18n-source: README.md@67cfc454ddfa4fddc18761183ca2883266d9be65 status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg" alt="MobileCI: Write, check and version the CI of iOS, Flutter and React Native apps."></picture></p>
@@ -54,7 +54,7 @@ detalhe dos runners.
   aliases e o aninhamento de YAML são limitados, o `detect` não entra em pastas ligadas por
   links simbólicos, as mensagens nunca citam o conteúdo dos arquivos e a saída de annotations
   não consegue injetar comandos de workflow.
-- **Testado e usado no próprio projeto** — 115 testes de Swift Testing rodam no macOS e em um
+- **Testado e usado no próprio projeto** — 119 testes de Swift Testing rodam no macOS e em um
   simulador de iPhone; os workflows de iOS e Flutter dos exemplos deste repositório são escritos
   por `mobileci init`, e um job de CI falha quando eles se afastam do gerador.
 

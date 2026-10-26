@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@dc152ebd5673ac18e3cf1c1689e029c5db193284 status=reviewed -->
+<!-- i18n-source: README.md@67cfc454ddfa4fddc18761183ca2883266d9be65 status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg" alt="MobileCI: Write, check and version the CI of iOS, Flutter and React Native apps."></picture></p>
@@ -53,7 +53,7 @@ Flutter, Gradle и Expo. Он предназначен для разработч
 - **Безопасен на недоверенных репозиториях** — файлы читаются с ограничением размера, алиасы и
   вложенность YAML ограничены, `detect` не заходит в папки по символическим ссылкам, сообщения
   никогда не цитируют содержимое файлов, а вывод аннотаций не может внедрить команды workflow.
-- **Протестирован и используется самим проектом** — 115 тестов Swift Testing выполняются на
+- **Протестирован и используется самим проектом** — 119 тестов Swift Testing выполняются на
   macOS и в симуляторе iPhone; workflow для iOS и Flutter в примерах этого репозитория пишет
   `mobileci init`, а задание CI падает, если они расходятся с генератором.
 
