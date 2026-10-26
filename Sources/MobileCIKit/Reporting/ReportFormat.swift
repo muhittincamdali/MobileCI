@@ -91,7 +91,9 @@ enum JSONReport {
 }
 
 /// Workflow commands. Values are escaped the way `@actions/core` escapes them, so text from a
-/// file name or message cannot end the command early or start a second one.
+/// file name or message cannot end the command early or start a second one. The remaining
+/// control and bidirectional characters are then replaced, as in the text report, because the
+/// runner prints the command into the job log.
 enum GitHubReport {
     static func render(_ findings: [Finding]) -> String {
         findings.map { finding in
@@ -115,6 +117,7 @@ enum GitHubReport {
         text.replacingOccurrences(of: "%", with: "%25")
             .replacingOccurrences(of: "\r", with: "%0D")
             .replacingOccurrences(of: "\n", with: "%0A")
+            .sanitizedForTerminal
     }
 
     static func escapeProperty(_ text: String) -> String {

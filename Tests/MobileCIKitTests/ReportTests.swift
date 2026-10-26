@@ -34,6 +34,15 @@ struct ReportTests {
         #expect(output == "::error file=x%2Cline=1%3A%3A%0A%3A%3Aadd-mask%3A%3Ay.yml,line=1,col=1,title=MCI000 invalid-workflow::first%0A::set-output name=a::b 100%25\n")
     }
 
+    /// The runner prints workflow commands into the job log, where an escape sequence or a
+    /// right-to-left override in a file name would change what the reader sees.
+    @Test func githubCommandsCarryNoControlCharacters() {
+        let hostile = Finding(rule: .invalidWorkflow, severity: .error, path: "a\u{1B}[2Kb\u{7}\u{202E}lmy.yml",
+                              location: .start, message: "bad\u{1B}]8;;x\u{7} \u{2066}m")
+        let output = ReportFormat.github.render([hostile], filesChecked: 1)
+        #expect(output == "::error file=a?[2Kb??lmy.yml,line=1,col=1,title=MCI000 invalid-workflow::bad?]8;;x? ?m\n")
+    }
+
     @Test func noteBecomesNotice() {
         let note = Finding(rule: .checkoutPersistsCredentials, severity: .note, path: "w.yml", location: .start, message: "m")
         #expect(ReportFormat.github.render([note], filesChecked: 1).hasPrefix("::notice "))
