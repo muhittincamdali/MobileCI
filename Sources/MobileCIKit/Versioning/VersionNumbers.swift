@@ -9,6 +9,8 @@ public enum VersionPart: String, Sendable, CaseIterable {
 public enum VersionError: Error, Equatable, Sendable, CustomStringConvertible {
     case invalidVersion(String)
     case invalidBuildNumber(String)
+    /// The files hold build numbers, but none is digits only, so there is nothing to increment.
+    case unreadableBuildNumber(String)
     case tooLarge(String, limit: Int)
     case nothingToChange(String)
 
@@ -18,6 +20,9 @@ public enum VersionError: Error, Equatable, Sendable, CustomStringConvertible {
             return "\(text.sanitizedForTerminal.truncated(to: 60)) is not a version: use 1 to 3 numbers separated by dots, such as 2.4.1."
         case .invalidBuildNumber(let text):
             return "\(text.sanitizedForTerminal.truncated(to: 60)) is not a build number: use digits only, such as 42."
+        case .unreadableBuildNumber(let text):
+            return "The build number \(text.sanitizedForTerminal.truncated(to: 60)) cannot be incremented: only digits are read, such as 42. "
+                + "Set one with `mobileci version build <number>`."
         case .tooLarge(let text, let limit):
             return "\(text.sanitizedForTerminal.truncated(to: 60)) is larger than \(limit), the largest value Google Play accepts as a version code."
         case .nothingToChange(let reason):

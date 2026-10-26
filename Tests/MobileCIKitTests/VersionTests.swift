@@ -205,6 +205,21 @@ struct VersionManagerTests {
         #expect(throws: VersionError.self) { try VersionManager().plan(.nextBuild, files: [file]) }
     }
 
+    /// `1.2.3` is a valid Apple build string but not a number this tool can increment; counting
+    /// from 1 would write a lower build into every file.
+    @Test func unreadableBuildNumbersAreNotResetToOne() throws {
+        let folder = try TemporaryFolder()
+        let url = try folder.write("App.xcodeproj/project.pbxproj", Fixture.projectFile(marketing: "2.0", build: "1.2.3"))
+        let file = try #require(VersionFile(url: url, path: "p", format: .xcodeProject))
+        #expect(file.buildNumbers == ["1.2.3", "1.2.3"])
+        #expect(throws: VersionError.unreadableBuildNumber("1.2.3")) { try VersionManager().plan(.nextBuild, files: [file]) }
+        #expect(throws: VersionError.unreadableBuildNumber("1.2.3")) {
+            try VersionManager().plan(.bump(.patch, build: true), files: [file])
+        }
+        #expect(try VersionManager().plan(.bump(.patch, build: false), files: [file]).version?.description == "2.0.1")
+        #expect(try VersionManager().plan(.setBuild(BuildNumber("5")), files: [file]).build?.value == 5)
+    }
+
     @Test func swiftPackagesHaveNothingToVersion() {
         #expect(throws: VersionError.self) { try VersionManager().plan(.nextBuild, files: []) }
     }

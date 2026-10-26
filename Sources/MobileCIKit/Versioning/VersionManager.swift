@@ -75,12 +75,12 @@ public struct VersionManager: Sendable {
         case .bump(let part, let bumpBuild):
             guard let currentVersion else { throw .nothingToChange("No readable version to bump; use `version set`.") }
             version = try currentVersion.bumped(part)
-            if bumpBuild { build = try nextBuild(after: currentBuild) }
+            if bumpBuild { build = try nextBuild(after: currentBuild, in: files) }
         case .set(let newVersion, let newBuild):
             version = newVersion
             build = newBuild
         case .nextBuild:
-            build = try nextBuild(after: currentBuild)
+            build = try nextBuild(after: currentBuild, in: files)
         case .setBuild(let newBuild):
             build = newBuild
         }
@@ -88,8 +88,14 @@ public struct VersionManager: Sendable {
         return VersionPlan(version: version, build: build, files: files, newTexts: texts)
     }
 
-    private func nextBuild(after current: BuildNumber?) throws(VersionError) -> BuildNumber {
-        guard let current else { return try BuildNumber(value: 1) }
-        return try current.incremented()
+    /// The build after `current`. With no build field at all the first build is 1; build fields
+    /// that exist but none of which is digits only (`CURRENT_PROJECT_VERSION = 1.2.3`) are
+    /// refused, since counting from 1 would overwrite them with a lower build.
+    private func nextBuild(after current: BuildNumber?, in files: [VersionFile]) throws(VersionError) -> BuildNumber {
+        if let current { return try current.incremented() }
+        if let unreadable = files.flatMap(\.buildNumbers).first {
+            throw .unreadableBuildNumber(unreadable)
+        }
+        return try BuildNumber(value: 1)
     }
 }
