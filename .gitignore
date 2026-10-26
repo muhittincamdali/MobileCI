@@ -41,3 +41,6 @@ Pods/
 
 # Test result bundles (xcodebuild -resultBundlePath)
 *.xcresult
+
+# lychee link checker cache (local runs of the links job)
+.lycheecache
