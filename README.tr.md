@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@ad7225472d3417634cddc96fcda1069257fc82f5 status=reviewed -->
+<!-- i18n-source: README.md@2a3784f0203ff81e6b374c360cc6a96b1b14c541 status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg" alt="MobileCI: Write, check and version the CI of iOS, Flutter and React Native apps."></picture></p>
@@ -48,9 +48,9 @@ Xcode, Flutter, Gradle ve Expo dosyalarında birbiriyle uyumlu tutar. Her runner
 - **Tek bir sürüm komutu** — `mobileci version bump patch --build`; `MARKETING_VERSION`,
   `pubspec.yaml`, `package.json`, `app.json` ve `build.gradle` dosyalarını birlikte günceller,
   Google Play'in sınırını aşan build numaralarını taşırmak yerine reddeder.
-- **Güvenilmeyen depolarda güvenli** — dosyalar boyut sınırıyla okunur, YAML alias'ları ve
-  iç içe geçme sınırlıdır, sembolik bağlantılar asla izlenmez, mesajlar dosya içeriğinden
-  alıntı yapmaz ve annotation çıktısı workflow komutu enjekte edemez.
+- **Güvenilmeyen depolarda güvenli** — dosyalar boyut sınırıyla okunur, YAML alias'ları ve iç
+  içe geçme sınırlıdır, `detect` sembolik bağlantılı klasörlere inmez, mesajlar dosya
+  içeriğinden alıntı yapmaz ve annotation çıktısı workflow komutu enjekte edemez.
 - **Test edilmiş ve kendi üzerinde denenmiş** — 108 Swift Testing testi macOS'ta ve bir
   iPhone simülatöründe çalışır; bu deponun örneklerindeki iOS ve Flutter workflow'ları
   `mobileci init` ile yazılır ve üreticiden saptıklarında bir CI işi başarısız olur.
@@ -261,7 +261,7 @@ hedefler; her değer bir seçenekle değiştirilebilir.
 ## Mimari
 
 - `Sources/MobileCIKit/Detection` — `ProjectDetector` depoyu gezer (3 seviye, sembolik
-  bağlantı yok) ve `.xcodeproj` paketlerini, `pubspec.yaml`, `package.json` ve
+  bağlantılı klasörlere inmeden) ve `.xcodeproj` paketlerini, `pubspec.yaml`, `package.json` ve
   `Package.swift` dosyalarını metin olarak okur.
 - `Sources/MobileCIKit/Generation` — `WorkflowGenerator` YAML'ı doğrulanmış değerlerden satır
   satır yazar; `PinnedAction` action commit'lerini tutar.

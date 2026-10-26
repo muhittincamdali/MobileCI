@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@ad7225472d3417634cddc96fcda1069257fc82f5 status=reviewed -->
+<!-- i18n-source: README.md@2a3784f0203ff81e6b374c360cc6a96b1b14c541 status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg" alt="MobileCI: Write, check and version the CI of iOS, Flutter and React Native apps."></picture></p>
@@ -33,7 +33,7 @@ MobileCI는 iOS, Flutter, React Native 앱의 CI를 위한 커맨드 라인 도�
 - **최신 상태로 고정된 workflow 작성** — 모든 action을 릴리스 commit에 고정하고, `macos-26`에서 Xcode 26.6을 선택하며, 권한은 `contents: read`로 두고, 타임아웃과 캐시를 설정하며 대체된 이전 실행은 취소합니다. 생성된 파일은 모두 이 도구 자체의 lint와 actionlint를 통과합니다.
 - **모바일 workflow용 lint 규칙 16개** — `macos-latest` 드리프트, 누락된 Xcode 선택, `| xcbeautify` 뒤에 가려진 테스트 실패, 누락된 타임아웃, 고정되지 않은 action, pull request 제목을 통한 스크립트 인젝션, `pull_request_target` 체크아웃을 검사하며 출력은 텍스트, JSON, GitHub annotation, SARIF 형식을 지원합니다.
 - **하나의 버전 명령** — `mobileci version bump patch --build`가 `MARKETING_VERSION`, `pubspec.yaml`, `package.json`, `app.json`, `build.gradle`을 한꺼번에 업데이트하며, Google Play의 한도를 넘는 빌드 번호는 넘치게 두지 않고 거부합니다.
-- **신뢰할 수 없는 저장소에서도 안전** — 파일은 크기 제한을 두고 읽고, YAML 별칭과 중첩 깊이에는 한도가 있으며, 심볼릭 링크는 따라가지 않고, 메시지에는 파일 내용을 인용하지 않으며, annotation 출력으로는 workflow 명령을 주입할 수 없습니다.
+- **신뢰할 수 없는 저장소에서도 안전** — 파일은 크기 제한을 두고 읽고, YAML 별칭과 중첩 깊이에는 한도가 있으며, `detect`는 심볼릭 링크로 연결된 폴더로 들어가지 않고, 메시지에는 파일 내용을 인용하지 않으며, annotation 출력으로는 workflow 명령을 주입할 수 없습니다.
 - **테스트를 거쳐 직접 사용 중** — 108개의 Swift Testing 테스트가 macOS와 iPhone 시뮬레이터에서 실행됩니다. 이 저장소 예제의 iOS 및 Flutter workflow는 `mobileci init`으로 작성되며, 생성기의 결과와 달라지면 CI 작업이 실패합니다.
 
 ## 빠른 시작
@@ -216,7 +216,7 @@ API 레퍼런스와 문서:
 
 ## 아키텍처
 
-- `Sources/MobileCIKit/Detection` — `ProjectDetector`가 저장소를 탐색하며(3단계, 심볼릭 링크 제외) `.xcodeproj` 번들, `pubspec.yaml`, `package.json`, `Package.swift`를 텍스트로 읽습니다.
+- `Sources/MobileCIKit/Detection` — `ProjectDetector`가 저장소를 탐색하며(3단계, 심볼릭 링크로 연결된 폴더는 탐색하지 않음) `.xcodeproj` 번들, `pubspec.yaml`, `package.json`, `Package.swift`를 텍스트로 읽습니다.
 - `Sources/MobileCIKit/Generation` — `WorkflowGenerator`는 검증된 값으로 YAML을 한 줄씩 작성하고, `PinnedAction`은 action commit을 보관합니다.
 - `Sources/MobileCIKit/Lint` — `YAMLValue`는 모든 노드의 위치를 유지하고([Yams](https://github.com/jpsim/Yams)로 노드 수와 깊이 제한을 두어 큰 스택을 가진 스레드에서 파싱합니다), `Workflow`는 job과 step을 제공하며, 규칙마다 함수 하나가 `Finding`을 보고합니다.
 - `Sources/MobileCIKit/Reporting` — 텍스트, JSON, GitHub annotation, SARIF 출력.

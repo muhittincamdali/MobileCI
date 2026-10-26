@@ -43,8 +43,8 @@ value cannot end the annotation or start another workflow command.
 Only regular files are read: a file is opened without waiting for a FIFO writer and its type is
 checked on the open descriptor, so a FIFO or a device (which would block or never end) is
 refused even when it replaces a regular file after the path was looked up, and a file that
-grows while it is read is cut off at the limit and refused. `detect` lists symbolic links as files and never follows them, so a link back to the
-root cannot make it loop, and it skips `node_modules`, `Pods`, `build`, `DerivedData`,
+grows while it is read is cut off at the limit and refused. `detect` lists symbolic links as files and does not descend into a linked folder, so a link
+back to the root cannot make it loop, and it skips `node_modules`, `Pods`, `build`, `DerivedData`,
 `.build`, hidden folders and bundles.
 
 YAML is parsed on a thread with a 16 MiB stack, so a deeply nested document fails with a

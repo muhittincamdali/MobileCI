@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@ad7225472d3417634cddc96fcda1069257fc82f5 status=reviewed -->
+<!-- i18n-source: README.md@2a3784f0203ff81e6b374c360cc6a96b1b14c541 status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg" alt="MobileCI: Write, check and version the CI of iOS, Flutter and React Native apps."></picture></p>
@@ -51,7 +51,7 @@ Flutter, Gradle и Expo. Он предназначен для разработч
   `MARKETING_VERSION`, `pubspec.yaml`, `package.json`, `app.json` и `build.gradle` одновременно
   и отклоняет номера сборки выше лимита Google Play, а не допускает переполнения.
 - **Безопасен на недоверенных репозиториях** — файлы читаются с ограничением размера, алиасы и
-  вложенность YAML ограничены, символические ссылки никогда не разыменовываются, сообщения
+  вложенность YAML ограничены, `detect` не заходит в папки по символическим ссылкам, сообщения
   никогда не цитируют содержимое файлов, а вывод аннотаций не может внедрить команды workflow.
 - **Протестирован и используется самим проектом** — 108 тестов Swift Testing выполняются на
   macOS и в симуляторе iPhone; workflow для iOS и Flutter в примерах этого репозитория пишет
@@ -263,9 +263,9 @@ return try WorkflowGenerator().workflow(for: project).contents
 
 ## Архитектура
 
-- `Sources/MobileCIKit/Detection` — `ProjectDetector` обходит репозиторий (3 уровня, без
-  символических ссылок) и читает как текст пакеты `.xcodeproj`, `pubspec.yaml`, `package.json`
-  и `Package.swift`.
+- `Sources/MobileCIKit/Detection` — `ProjectDetector` обходит репозиторий (3 уровня, без захода
+  в папки по символическим ссылкам) и читает как текст пакеты `.xcodeproj`, `pubspec.yaml`,
+  `package.json` и `Package.swift`.
 - `Sources/MobileCIKit/Generation` — `WorkflowGenerator` строка за строкой пишет YAML из
   проверенных значений; `PinnedAction` хранит коммиты action.
 - `Sources/MobileCIKit/Lint` — `YAMLValue` хранит позицию каждого узла (разбор выполняется с

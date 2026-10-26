@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@ad7225472d3417634cddc96fcda1069257fc82f5 status=reviewed -->
+<!-- i18n-source: README.md@2a3784f0203ff81e6b374c360cc6a96b1b14c541 status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg" alt="MobileCI: Write, check and version the CI of iOS, Flutter and React Native apps."></picture></p>
@@ -33,7 +33,7 @@ MobileCI 是一个命令行工具、一个 GitHub Action 和一个 Swift 库，�
 - **生成最新且已固定版本的 workflow** — 每个 action 都固定到其发布 commit，使用 `macos-26` 并选择 Xcode 26.6，权限为 `contents: read`，并配置超时、缓存，以及取消被取代的运行；每个生成的文件都能通过本工具自带的 lint 和 actionlint。
 - **16 条移动端 workflow lint 规则** — `macos-latest` 漂移、缺少 Xcode 选择、被 `| xcbeautify` 掩盖的测试失败、缺少超时、未固定的 action、通过 pull request 标题进行的脚本注入，以及 `pull_request_target` checkout；输出支持文本、JSON、GitHub annotation 和 SARIF 格式。
 - **一条版本命令** — `mobileci version bump patch --build` 会同时更新 `MARKETING_VERSION`、`pubspec.yaml`、`package.json`、`app.json` 和 `build.gradle`，并且会拒绝超过 Google Play 上限的构建号，而不是让它溢出。
-- **对不受信任的仓库也安全** — 读取文件时有大小限制，YAML 别名和嵌套层数有上限，从不跟随符号链接，消息从不引用文件内容，annotation 输出也无法注入 workflow 命令。
+- **对不受信任的仓库也安全** — 读取文件时有大小限制，YAML 别名和嵌套层数有上限，`detect` 不会进入符号链接指向的文件夹，消息从不引用文件内容，annotation 输出也无法注入 workflow 命令。
 - **经过测试并自用验证** — 108 个 Swift Testing 测试在 macOS 和 iPhone 模拟器上运行；本仓库示例中的 iOS 和 Flutter workflow 由 `mobileci init` 生成，一旦它们与生成器的输出不一致，就会有一个 CI 任务失败。
 
 ## 快速开始
@@ -216,7 +216,7 @@ API 参考文档与文章：
 
 ## 架构
 
-- `Sources/MobileCIKit/Detection` — `ProjectDetector` 遍历仓库（3 层，不跟随符号链接），并将 `.xcodeproj` 包、`pubspec.yaml`、`package.json` 和 `Package.swift` 作为文本读取。
+- `Sources/MobileCIKit/Detection` — `ProjectDetector` 遍历仓库（3 层，不进入符号链接指向的文件夹），并将 `.xcodeproj` 包、`pubspec.yaml`、`package.json` 和 `Package.swift` 作为文本读取。
 - `Sources/MobileCIKit/Generation` — `WorkflowGenerator` 根据经过验证的值逐行写出 YAML；`PinnedAction` 保存各 action 的 commit。
 - `Sources/MobileCIKit/Lint` — `YAMLValue` 保留每个节点的位置（使用 [Yams](https://github.com/jpsim/Yams) 在大栈线程上解析，并设有节点数和深度限制），`Workflow` 暴露 job 和 step，每条规则对应一个函数来报告 `Finding`。
 - `Sources/MobileCIKit/Reporting` — 文本、JSON、GitHub annotation 和 SARIF 输出。

@@ -28,8 +28,9 @@ for finding in findings {
 ```
 
 The library runs on macOS 14 and iOS 17 and later, and on Linux. It reads files with size
-limits, never follows symbolic links while searching, never runs anything from a project and
-never repeats file content in its messages; <doc:LimitsAndSafety> lists every limit.
+limits, does not descend into symlinked folders while searching, never runs anything from a
+project and never repeats file content in its messages; <doc:LimitsAndSafety> lists every
+limit.
 
 ## Topics
 

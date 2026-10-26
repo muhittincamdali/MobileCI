@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@ad7225472d3417634cddc96fcda1069257fc82f5 status=reviewed -->
+<!-- i18n-source: README.md@2a3784f0203ff81e6b374c360cc6a96b1b14c541 status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg" alt="MobileCI: Write, check and version the CI of iOS, Flutter and React Native apps."></picture></p>
@@ -50,10 +50,10 @@ pipeline fonctionnel sans devoir d’abord apprendre chaque détail des runners.
 - **Une seule commande de version** — `mobileci version bump patch --build` met à jour ensemble
   `MARKETING_VERSION`, `pubspec.yaml`, `package.json`, `app.json` et `build.gradle`, et refuse
   les numéros de build supérieurs à la limite de Google Play au lieu de les laisser déborder.
-- **Sûr sur des dépôts non fiables** — les fichiers sont lus avec des limites de taille, les alias
-  et l’imbrication YAML sont bornés, les liens symboliques ne sont jamais suivis, les messages ne
-  citent jamais le contenu des fichiers et la sortie d’annotations ne peut pas injecter de
-  commandes de workflow.
+- **Sûr sur des dépôts non fiables** — les fichiers sont lus avec des limites de taille, les
+  alias et l’imbrication YAML sont bornés, `detect` ne descend pas dans les dossiers liés
+  symboliquement, les messages ne citent jamais le contenu des fichiers et la sortie
+  d’annotations ne peut pas injecter de commandes de workflow.
 - **Testé et utilisé en interne** — 108 tests Swift Testing s’exécutent sur macOS et sur un
   simulateur d’iPhone ; les workflows iOS et Flutter des exemples de ce dépôt sont écrits par
   `mobileci init`, et un job de CI échoue lorsqu’ils s’écartent du générateur.
@@ -264,9 +264,9 @@ chaque valeur peut être modifiée avec une option.
 
 ## Architecture
 
-- `Sources/MobileCIKit/Detection` — `ProjectDetector` parcourt le dépôt (3 niveaux, sans lien
-  symbolique) et lit comme du texte les bundles `.xcodeproj`, `pubspec.yaml`, `package.json` et
-  `Package.swift`.
+- `Sources/MobileCIKit/Detection` — `ProjectDetector` parcourt le dépôt (3 niveaux, sans
+  descendre dans les dossiers liés symboliquement) et lit comme du texte les bundles
+  `.xcodeproj`, `pubspec.yaml`, `package.json` et `Package.swift`.
 - `Sources/MobileCIKit/Generation` — `WorkflowGenerator` écrit le YAML ligne par ligne à partir
   de valeurs validées ; `PinnedAction` conserve les commits des actions.
 - `Sources/MobileCIKit/Lint` — `YAMLValue` conserve la position de chaque nœud (analysé avec

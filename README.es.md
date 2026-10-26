@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@ad7225472d3417634cddc96fcda1069257fc82f5 status=reviewed -->
+<!-- i18n-source: README.md@2a3784f0203ff81e6b374c360cc6a96b1b14c541 status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg" alt="MobileCI: Write, check and version the CI of iOS, Flutter and React Native apps."></picture></p>
@@ -51,9 +51,9 @@ sin tener que aprender antes todos los detalles de los runners.
   `MARKETING_VERSION`, `pubspec.yaml`, `package.json`, `app.json` y `build.gradle`, y rechaza
   los números de compilación que superan el límite de Google Play en lugar de desbordarlos.
 - **Seguro con repositorios no confiables** — los archivos se leen con límites de tamaño, los
-  alias y el anidamiento de YAML están acotados, nunca se siguen los enlaces simbólicos, los
-  mensajes nunca citan el contenido de los archivos y la salida de anotaciones no puede
-  inyectar comandos de workflow.
+  alias y el anidamiento de YAML están acotados, `detect` no entra en carpetas enlazadas
+  simbólicamente, los mensajes nunca citan el contenido de los archivos y la salida de
+  anotaciones no puede inyectar comandos de workflow.
 - **Probado y usado en el propio proyecto** — 108 tests de Swift Testing se ejecutan en macOS
   y en un simulador de iPhone; los workflows de iOS y Flutter de los ejemplos de este
   repositorio los escribe `mobileci init`, y un job de CI falla cuando se desvían del
@@ -265,8 +265,8 @@ GitHub; cada valor se puede cambiar con una opción.
 ## Arquitectura
 
 - `Sources/MobileCIKit/Detection` — `ProjectDetector` recorre el repositorio (3 niveles, sin
-  enlaces simbólicos) y lee como texto los paquetes `.xcodeproj`, `pubspec.yaml`,
-  `package.json` y `Package.swift`.
+  entrar en carpetas enlazadas simbólicamente) y lee como texto los paquetes `.xcodeproj`,
+  `pubspec.yaml`, `package.json` y `Package.swift`.
 - `Sources/MobileCIKit/Generation` — `WorkflowGenerator` escribe el YAML línea por línea a
   partir de valores validados; `PinnedAction` guarda los commits de las actions.
 - `Sources/MobileCIKit/Lint` — `YAMLValue` conserva la posición de cada nodo (se analiza con

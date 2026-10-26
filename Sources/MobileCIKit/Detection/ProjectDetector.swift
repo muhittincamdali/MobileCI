@@ -3,7 +3,7 @@ import Foundation
 /// Finds the iOS, Swift package, Flutter and React Native projects in a repository.
 ///
 /// The search looks at the root and at folders up to ``maximumDepth`` levels below it. It does
-/// not follow symbolic links, skips dependency and build folders (`node_modules`, `Pods`,
+/// not descend into symbolic links to folders, skips dependency and build folders (`node_modules`, `Pods`,
 /// `.build`, `build`, `DerivedData`…) and stops after ``maximumEntries`` directory entries, so a
 /// large or cyclic tree cannot keep it running.
 public struct ProjectDetector: Sendable {
@@ -48,7 +48,7 @@ public struct ProjectDetector: Sendable {
     }
 
     /// The folder's entries, or `nil` when the budget runs out. Symbolic links are listed as
-    /// files, so they are never followed.
+    /// files, so the walk never descends into a linked folder.
     private static func entries(of folder: URL, budget: inout Int) -> [Entry]? {
         let keys: [URLResourceKey] = [.isDirectoryKey, .isSymbolicLinkKey]
         let listing = DirectoryListing.entries(of: folder, limit: budget, keys: keys)

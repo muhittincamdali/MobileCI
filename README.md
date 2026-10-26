@@ -45,8 +45,8 @@ a working pipeline without learning every runner detail first.
   `MARKETING_VERSION`, `pubspec.yaml`, `package.json`, `app.json` and `build.gradle`
   together, and refuses build numbers above Google Play's limit instead of overflowing.
 - **Safe on untrusted repositories** — files are read with size limits, YAML aliases and
-  nesting are bounded, symbolic links are never followed, messages never quote file content,
-  and annotation output cannot inject workflow commands.
+  nesting are bounded, `detect` does not descend into symlinked folders, messages never quote
+  file content, and annotation output cannot inject workflow commands.
 - **Tested and dogfooded** — 108 Swift Testing tests run on macOS and an iPhone simulator;
   the iOS and Flutter workflows of this repository's examples are written by `mobileci init`
   and a CI job fails when they drift from the generator.
@@ -254,9 +254,9 @@ every value can be changed with an option.
 
 ## Architecture
 
-- `Sources/MobileCIKit/Detection` — `ProjectDetector` walks the repository (3 levels, no
-  symbolic links) and reads `.xcodeproj` bundles, `pubspec.yaml`, `package.json` and
-  `Package.swift` as text.
+- `Sources/MobileCIKit/Detection` — `ProjectDetector` walks the repository (3 levels, not
+  descending into symlinked folders) and reads `.xcodeproj` bundles, `pubspec.yaml`,
+  `package.json` and `Package.swift` as text.
 - `Sources/MobileCIKit/Generation` — `WorkflowGenerator` writes the YAML line by line from
   validated values; `PinnedAction` holds the action commits.
 - `Sources/MobileCIKit/Lint` — `YAMLValue` keeps the position of every node (parsed with
