@@ -13,6 +13,8 @@ public enum VersionError: Error, Equatable, Sendable, CustomStringConvertible {
     case unreadableBuildNumber(String)
     /// A build number above Google Play's `versionCode` limit.
     case tooLarge(String, limit: Int)
+    /// A build number to set below ``BuildNumber/minimumToSet``, such as 0.
+    case buildNumberTooSmall(String, minimum: Int)
     /// A bump that would take one part of a version past ``MarketingVersion/maximumComponent``.
     case versionPartTooLarge(String, limit: Int)
     case nothingToChange(String)
@@ -28,6 +30,8 @@ public enum VersionError: Error, Equatable, Sendable, CustomStringConvertible {
                 + "Set one with `mobileci version build --set <number>`."
         case .tooLarge(let text, let limit):
             return "\(text.sanitizedForTerminal.truncated(to: 60)) is larger than \(limit), the largest value Google Play accepts as a version code."
+        case .buildNumberTooSmall(let text, let minimum):
+            return "\(text.sanitizedForTerminal.truncated(to: 60)) is smaller than \(minimum), the smallest value Google Play accepts as a version code."
         case .versionPartTooLarge(let text, let limit):
             return "\(text.sanitizedForTerminal.truncated(to: 60)) cannot be bumped: each part of a version is at most \(limit)."
         case .nothingToChange(let reason):
@@ -119,6 +123,9 @@ public struct BuildNumber: Sendable, Equatable, Comparable, CustomStringConverti
     public let value: Int
 
     public static let maximum = 2_100_000_000
+    /// The smallest build number `version set --build` and `version build --set` write: Google
+    /// Play refuses a `versionCode` of 0. A 0 already in a file is still read, and incremented to 1.
+    public static let minimumToSet = 1
 
     public init(_ text: String) throws(VersionError) {
         let trimmed = text.trimmingCharactersInSet(" \t\"")

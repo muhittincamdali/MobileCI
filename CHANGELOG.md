@@ -82,6 +82,7 @@ projects in a repository, write a workflow for each, lint workflows, and version
   backslashes, braces, control characters and `${{` are refused.
 - Version and build numbers are parsed digit by digit against fixed limits, so oversized
   numbers are refused instead of trapping, and a bump at the limit fails instead of wrapping.
+  A build number of 0, which Google Play refuses as a `versionCode`, is not written.
 
 ## [1.0.0] - 2026-02-03
 

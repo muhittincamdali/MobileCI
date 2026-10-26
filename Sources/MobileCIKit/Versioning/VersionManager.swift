@@ -78,14 +78,21 @@ public struct VersionManager: Sendable {
             if bumpBuild { build = try nextBuild(after: currentBuild, in: files) }
         case .set(let newVersion, let newBuild):
             version = newVersion
-            build = newBuild
+            if let newBuild { build = try settable(newBuild) }
         case .nextBuild:
             build = try nextBuild(after: currentBuild, in: files)
         case .setBuild(let newBuild):
-            build = newBuild
+            build = try settable(newBuild)
         }
         let texts = files.map { $0.updatedText(version: version?.description, build: build?.description) }
         return VersionPlan(version: version, build: build, files: files, newTexts: texts)
+    }
+
+    private func settable(_ build: BuildNumber) throws(VersionError) -> BuildNumber {
+        guard build.value >= BuildNumber.minimumToSet else {
+            throw .buildNumberTooSmall(build.description, minimum: BuildNumber.minimumToSet)
+        }
+        return build
     }
 
     /// The build after `current`. With no build field at all the first build is 1; build fields

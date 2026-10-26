@@ -208,6 +208,21 @@ struct VersionManagerTests {
         #expect(throws: VersionError.self) { try VersionManager().plan(.nextBuild, files: [file]) }
     }
 
+    /// Google Play refuses a `versionCode` of 0, so 0 is never written; a 0 already in a file
+    /// still counts up to 1.
+    @Test func buildNumberZeroIsNotSet() throws {
+        let folder = try TemporaryFolder()
+        let url = try folder.write("pubspec.yaml", "version: 1.0.0+0\n")
+        let file = try #require(VersionFile(url: url, path: "pubspec.yaml", format: .pubspec))
+        let zero = try BuildNumber("0")
+        let refused = VersionError.buildNumberTooSmall("0", minimum: BuildNumber.minimumToSet)
+        #expect(throws: refused) { try VersionManager().plan(.setBuild(zero), files: [file]) }
+        #expect(throws: refused) { try VersionManager().plan(.set(MarketingVersion("2.0.0"), build: zero), files: [file]) }
+        #expect(refused.description.contains("smaller than 1"))
+        #expect(try VersionManager().plan(.nextBuild, files: [file]).build?.value == 1)
+        #expect(try VersionManager().plan(.setBuild(BuildNumber("1")), files: [file]).build?.value == 1)
+    }
+
     /// `1.2.3` is a valid Apple build string but not a number this tool can increment; counting
     /// from 1 would write a lower build into every file.
     @Test func unreadableBuildNumbersAreNotResetToOne() throws {

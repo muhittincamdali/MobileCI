@@ -56,6 +56,8 @@ left alone. Swift packages are versioned by git tags and have no version file.
 - A build number is digits only, at most 2,100,000,000: the largest `versionCode` Google Play
   accepts, which Flutter's build number and Expo's `android.versionCode` become.
   ``BuildNumber``
+- A build number that `version set --build` or `version build --set` writes is at least 1,
+  since Google Play refuses a `versionCode` of 0. A 0 already in a file is incremented to 1.
 - Numbers are read digit by digit against these limits, so `99999999999999999999` is refused
   with a message instead of trapping on an integer overflow, and a bump at the limit fails
   instead of wrapping around.
