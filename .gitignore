@@ -20,17 +20,12 @@ DerivedData/
 Packages/
 # Package.resolved is committed: it fixes the dependency versions the CLI and the action are built with.
 
+# Flutter (Examples/flutter_sample)
+.dart_tool/
+.flutter-plugins-dependencies
+
 # CocoaPods
 Pods/
-
-# Carthage
-Carthage/Build/
-
-# fastlane
-fastlane/report.xml
-fastlane/Preview.html
-fastlane/screenshots
-fastlane/test_output
 
 # macOS
 .DS_Store
@@ -43,3 +38,6 @@ fastlane/test_output
 *.xcuserstate
 *.xcscmblueprint
 *.idea/
+
+# Test result bundles (xcodebuild -resultBundlePath)
+*.xcresult
