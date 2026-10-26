@@ -1,80 +1,52 @@
-# Contributing to SwiftRouter
+# Contributing to MobileCI
 
-First off, thank you for considering contributing to SwiftRouter! It's people like you that make SwiftRouter such a great tool.
+Thank you for helping. This guide covers the checks a pull request has to pass and the parts
+of the repository that change together.
 
-## Code of Conduct
+## Set up
 
-This project and everyone participating in it is governed by our Code of Conduct. By participating, you are expected to uphold this code.
+You need Xcode 26 or later (or Swift 6.2 on Linux), Node.js 24 for the screenshot scripts and,
+for the Flutter example, Flutter 3.41 or later.
 
-## How Can I Contribute?
-
-### Reporting Bugs
-
-Before creating bug reports, please check the existing issues as you might find out that you don't need to create one. When you are creating a bug report, please include as many details as possible:
-
-- **Use a clear and descriptive title**
-- **Describe the exact steps which reproduce the problem**
-- **Provide specific examples to demonstrate the steps**
-- **Describe the behavior you observed after following the steps**
-- **Explain which behavior you expected to see instead and why**
-- **Include Swift version and OS version**
-
-### Suggesting Enhancements
-
-Enhancement suggestions are tracked as GitHub issues. When creating an enhancement suggestion, please include:
-
-- **Use a clear and descriptive title**
-- **Provide a step-by-step description of the suggested enhancement**
-- **Provide specific examples to demonstrate the steps**
-- **Describe the current behavior and explain which behavior you expected to see instead**
-- **Explain why this enhancement would be useful**
-
-### Pull Requests
-
-1. Fork the repo and create your branch from `main`
-2. If you've added code that should be tested, add tests
-3. If you've changed APIs, update the documentation
-4. Ensure the test suite passes
-5. Make sure your code follows the existing style (SwiftLint)
-6. Issue that pull request!
-
-## Development Setup
-
-```bash
-# Clone your fork
-git clone https://github.com/YOUR_USERNAME/SwiftRouter.git
-
-# Navigate to the project
-cd SwiftRouter
-
-# Open in Xcode
-open Package.swift
-
-# Run tests
+```sh
+swift build
 swift test
 ```
 
-## Style Guide
+## Before you open a pull request
 
-- Follow [Swift API Design Guidelines](https://swift.org/documentation/api-design-guidelines/)
-- Use SwiftLint for code style consistency
-- Write meaningful commit messages following [Conventional Commits](https://www.conventionalcommits.org/)
-- Document public APIs with DocC-compatible comments
+Run the checks CI runs:
 
-## Commit Messages
+```sh
+swift test                                                    # macOS
+xcodebuild test -scheme MobileCI-Package \
+  -destination 'platform=iOS Simulator,name=iPhone 17'        # iPhone simulator
+scripts/generate-workflows.sh --check                         # templates match the generator
+swift run mobileci lint .github/workflows Templates
+actionlint .github/workflows/*.yml Templates/*.yml
+```
 
-We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+- **A new lint rule** needs a `RuleID` case with its name, severity, summary and fix, one check
+  function in `Sources/MobileCIKit/Lint`, tests for a workflow that triggers it and one that
+  does not, and a section in `MobileCIKit.docc/LintRules.md`. Messages must not quote file
+  content beyond a short identifier passed through `Rules.quoted`.
+- **A generator change** changes the generated files: run `scripts/generate-workflows.sh` and
+  commit `Templates/` and the example workflows with it. Every generated workflow must keep
+  passing `mobileci lint` without findings (`GeneratorTests`).
+- **A new action version**: update `PinnedAction.swift` with the commit the release tag points
+  to (`gh api repos/<owner>/<repo>/commits/<tag> --jq .sha`), then regenerate. Dependabot
+  updates the example workflows; its pull request needs the same change to pass.
+- **Screenshots** come from code: `scripts/capture-terminal.sh` for the terminal images and
+  `scripts/capture-example-screens.sh` for the example app. Do not edit images by hand.
 
-- `feat:` A new feature
-- `fix:` A bug fix
-- `docs:` Documentation only changes
-- `style:` Code style changes (formatting, semicolons, etc)
-- `refactor:` Code change that neither fixes a bug nor adds a feature
-- `test:` Adding missing tests
-- `chore:` Changes to the build process or auxiliary tools
+## Commits
 
-Example: `feat(deeplink): add universal link support`
+Use [Conventional Commits](https://www.conventionalcommits.org/) (`feat(lint): …`,
+`fix(version): …`), one change per commit, and describe why in the body. Add a line to the
+`Unreleased` section of [CHANGELOG.md](CHANGELOG.md) for anything a user notices.
 
-## License
+## Code of conduct
 
-By contributing, you agree that your contributions will be licensed under the MIT License.
+This project follows the
+[code of conduct](https://github.com/muhittincamdali/.github/blob/main/CODE_OF_CONDUCT.md)
+of the muhittincamdali repositories.

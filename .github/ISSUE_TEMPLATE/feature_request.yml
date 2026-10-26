@@ -1,62 +1,22 @@
-name: Feature Request
-description: Suggest an idea for this project
-title: "[Feature]: "
+name: Rule or feature request
+description: A mobile CI problem MobileCI should find, or a project kind it should support.
 labels: ["enhancement"]
 body:
-  - type: markdown
-    attributes:
-      value: |
-        Thanks for suggesting a feature! Please fill out the information below.
-
   - type: textarea
     id: problem
     attributes:
-      label: Problem Statement
-      description: Is your feature request related to a problem? Please describe.
-      placeholder: A clear and concise description of what the problem is.
+      label: Problem
+      description: What goes wrong in CI today, and what it costs (failed releases, macOS minutes, a security risk).
     validations:
       required: true
-
   - type: textarea
-    id: solution
+    id: example
     attributes:
-      label: Proposed Solution
-      description: Describe the solution you'd like
-      placeholder: A clear and concise description of what you want to happen.
-    validations:
-      required: true
-
+      label: Example
+      description: A workflow or project layout that shows it.
+      render: yaml
   - type: textarea
-    id: api
+    id: proposal
     attributes:
-      label: Proposed API
-      description: If applicable, show how you envision the API
-      render: swift
-
-  - type: textarea
-    id: alternatives
-    attributes:
-      label: Alternatives Considered
-      description: Describe any alternative solutions or features you've considered.
-
-  - type: dropdown
-    id: category
-    attributes:
-      label: Category
-      options:
-        - Navigation Pattern
-        - Deep Linking
-        - State Management
-        - Animation/Transition
-        - API Improvement
-        - Documentation
-        - Other
-    validations:
-      required: true
-
-  - type: checkboxes
-    id: contribution
-    attributes:
-      label: Contribution
-      options:
-        - label: I would be willing to submit a PR for this feature
+      label: Proposed rule or behaviour
+      description: What MobileCI should report or write, and how a user would fix it.
