@@ -99,6 +99,8 @@ public struct WorkflowLinter: Sendable {
             return "The YAML is nested more than \(limit) levels deep; workflows are not."
         case .tooManyNodes(let limit):
             return "The YAML expands to more than \(limit) nodes (through aliases); it was not checked."
+        case .tooMuchText(let limit):
+            return "The YAML expands to more than \(limit / 1_048_576) MiB of text (through aliases); it was not checked."
         case .empty:
             return "The file is empty."
         }

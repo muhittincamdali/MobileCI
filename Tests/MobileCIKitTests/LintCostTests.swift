@@ -73,4 +73,17 @@ import Testing
         #expect(findings.filter { $0.rule == .macOSWorkflowWithoutConcurrency }.count == 1)
         #expect(elapsed < Self.timeLimit)
     }
+
+    /// One 100,000 character `run:` anchored once and repeated in 2,000 steps through an alias:
+    /// 200 MB of script text in a 122 KB file. The loader stops at its text limit, so the file
+    /// fails with MCI000 instead of being scanned once per step.
+    @Test func longScriptRepeatedThroughAnAlias() {
+        let script = String(repeating: "x", count: 100_000)
+        let steps = ["{run: &r \"\(script)\"}"] + Array(repeating: "{run: *r}", count: 1999)
+        let yaml = Self.header + "jobs:\n  a:\n    runs-on: ubuntu-24.04\n    steps: [" + steps.joined(separator: ", ") + "]\n"
+        var findings: [Finding] = []
+        let elapsed = ContinuousClock().measure { findings = lint(yaml) }
+        #expect(findings.map(\.rule) == [.invalidWorkflow])
+        #expect(elapsed < Self.timeLimit)
+    }
 }

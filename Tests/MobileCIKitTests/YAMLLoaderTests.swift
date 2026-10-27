@@ -72,6 +72,20 @@ struct YAMLLoaderTests {
         #expect(findings.map(\.rule) == [.invalidWorkflow])
     }
 
+    /// A 100,000 character value repeated through aliases: 30 copies are read, 50 copies are
+    /// past the 4 MiB text limit.
+    @Test func aliasedTextStopsAtTheTextLimit() {
+        func document(copies: Int) -> String {
+            "a: &a \(String(repeating: "x", count: 100_000))\nb: [" + Array(repeating: "*a", count: copies).joined(separator: ", ") + "]\n"
+        }
+        guard case .success(let root) = YAMLLoader.load(document(copies: 30)) else {
+            Issue.record("30 copies should load")
+            return
+        }
+        #expect(root["b"]?.items.count == 30)
+        #expect(YAMLLoader.load(document(copies: 50)) == .failure(.tooMuchText(limit: YAMLLoader.maximumTextBytes)))
+    }
+
     @Test func emptyDocument() {
         #expect(YAMLLoader.load("") == .failure(.empty))
         #expect(YAMLLoader.load("# only a comment\n") == .failure(.empty))

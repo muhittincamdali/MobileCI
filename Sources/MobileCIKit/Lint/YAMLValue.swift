@@ -82,6 +82,8 @@ public enum YAMLLoadError: Error, Equatable, Sendable {
     case duplicateKey(SourceLocation?)
     case tooDeep(limit: Int)
     case tooManyNodes(limit: Int)
+    /// More than `limit` UTF-8 bytes of scalar text after alias expansion (4 MiB).
+    case tooMuchText(limit: Int)
     case empty
 }
 
@@ -93,6 +95,11 @@ enum YAMLLoader {
     /// Aliases share nodes, so a small document can describe a tree with billions of nodes
     /// ("billion laughs"). Expansion stops at this many nodes.
     static let maximumNodes = 200_000
+
+    /// One long anchored value repeated through aliases stays under the node limit but makes
+    /// the rules read its text once per alias. Expansion stops at this much scalar text: four
+    /// times the largest file that is read, enough for a script reused across a few jobs.
+    static let maximumTextBytes = 4 * TextFile.defaultLimit
 
     static func load(_ text: String) -> Result<YAMLValue, YAMLLoadError> {
         LargeStack.run { loadOnCurrentThread(text) }
@@ -131,6 +138,7 @@ enum YAMLLoader {
 
     private struct Converter {
         var visited = 0
+        var textBytes = 0
 
         mutating func convert(_ node: Node, depth: Int) throws(YAMLLoadError) -> YAMLValue {
             visited += 1
@@ -143,6 +151,10 @@ enum YAMLLoader {
             let location = node.mark.map { SourceLocation(line: $0.line, column: $0.column) } ?? .start
             switch node {
             case .scalar(let scalar):
+                textBytes += scalar.string.utf8.count
+                guard textBytes <= YAMLLoader.maximumTextBytes else {
+                    throw .tooMuchText(limit: YAMLLoader.maximumTextBytes)
+                }
                 // A literal block (`run: |`) starts on the line after its indicator, so line
                 // offsets counted in its text land on the right source lines.
                 if scalar.style == .literal {
