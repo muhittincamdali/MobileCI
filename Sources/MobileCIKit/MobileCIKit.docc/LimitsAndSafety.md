@@ -51,6 +51,20 @@ YAML is parsed on a thread with a 16 MiB stack, so a deeply nested document fail
 finding on every thread it is checked from — including the small-stack threads of Swift
 concurrency and test runners — instead of overflowing the stack.
 
+### Lint time
+
+The time to lint one workflow grows with its size — its YAML nodes (at most 200,000) and the
+text of their values — not with the product of two of its parts. Each `env:` scope keeps only
+the names it sets and refers to the scope around it, so many workflow `env:` names over many
+steps are not copied into every step, and the workflow's and each job's settings that the rules
+need for every job or step (`permissions`, `concurrency`, `env`, `defaults.run.shell`) are
+looked up once. The test suite lints files of this kind, such as 30,000 workflow `env:` names
+over 30,000 steps, and expects each to finish within ten seconds.
+
+A run still lints every workflow it is given, up to 10,000 files per folder, so its total time
+grows with the number and size of those files. Give the job that runs the action a
+`timeout-minutes`.
+
 ### Generated values
 
 Everything the generator writes into a workflow (scheme, project, workspace, folder, branch,

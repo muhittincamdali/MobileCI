@@ -74,6 +74,11 @@ projects in a repository, write a workflow for each, lint workflows, and version
   are regular files, so a FIFO or a device cannot block the tool.
 - YAML documents are limited to 64 levels and 200,000 nodes after alias expansion ("billion
   laughs" documents fail with `MCI000`) and are parsed on a thread with a 16 MiB stack.
+- Linting one workflow takes time in proportion to its size: each `env:` scope keeps
+  only its own names over the scope around it, and the workflow and job settings that every
+  job or step needs are looked up once, so a file cannot make the work grow with the product
+  of two of its parts, such as `env:` names times steps. A run's total time still grows with
+  the number and size of the files it lints.
 - Project search does not follow symbolic links and stops after 20,000 entries.
 - Findings never quote file content; YAML parser messages, which quote the input, are reduced
   to a position. Paths are printed with control and bidirectional characters replaced, and
