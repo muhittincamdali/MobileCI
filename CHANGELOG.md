@@ -72,13 +72,16 @@ projects in a repository, write a workflow for each, lint workflows, and version
 
 - Files are read with size limits (1 MiB, 32 MiB for `project.pbxproj`) and only when they
   are regular files, so a FIFO or a device cannot block the tool.
-- YAML documents are limited to 64 levels and 200,000 nodes after alias expansion ("billion
-  laughs" documents fail with `MCI000`) and are parsed on a thread with a 16 MiB stack.
-- Linting one workflow takes time in proportion to its size: each `env:` scope keeps
-  only its own names over the scope around it, and the workflow and job settings that every
-  job or step needs are looked up once, so a file cannot make the work grow with the product
-  of two of its parts, such as `env:` names times steps. A run's total time still grows with
-  the number and size of the files it lints.
+- YAML documents are limited to 64 levels, and to 200,000 nodes and 4 MiB of scalar text
+  after alias expansion ("billion laughs" documents and long values repeated through aliases
+  fail with `MCI000`), and are parsed on a thread with a 16 MiB stack.
+- Linting one workflow takes time in proportion to its size after alias expansion, which the
+  node and text limits bound. Each `env:` scope keeps only its own names over the scope
+  around it, the workflow and job settings that every job or step needs are looked up once,
+  a job's runner labels are read once with each `${{ matrix.KEY }}` expanded once per key,
+  and a suppression comment line is read once, so none of these makes the work grow with the
+  product of two parts of the file, such as `env:` names times steps or runner labels times
+  matrix values. A run's total time still grows with the number and size of the files it lints.
 - Project search does not follow symbolic links and stops after 20,000 entries.
 - Findings never quote file content; YAML parser messages, which quote the input, are reduced
   to a position. Paths are printed with control and bidirectional characters replaced, and

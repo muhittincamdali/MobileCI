@@ -26,8 +26,8 @@ expression types; run [actionlint](https://github.com/rhysd/actionlint) next to 
 ### MCI000 invalid-workflow (error)
 
 The file is not UTF-8, is larger than 1 MiB, is not valid YAML, nests more than 64 levels,
-expands to more than 200,000 nodes through aliases, or has no `jobs:` mapping. The message
-gives the position only; it never quotes the file.
+expands to more than 200,000 nodes or 4 MiB of text through aliases, or has no `jobs:`
+mapping. The message gives the position only; it never quotes the file.
 
 ### MCI001 unpinned-action (warning)
 

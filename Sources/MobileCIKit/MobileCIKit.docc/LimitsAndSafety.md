@@ -33,6 +33,7 @@ value cannot end the annotation or start another workflow command.
 | `project.pbxproj`                | 32 MiB                   | Not read                                        |
 | YAML nesting                     | 64 levels                | `MCI000`                                        |
 | YAML nodes after alias expansion | 200,000                  | `MCI000` ("billion laughs" documents stop here) |
+| YAML text after alias expansion  | 4 MiB                    | `MCI000`                                        |
 | JSON nesting while editing       | 64 levels                | The field is not edited                         |
 | Folders searched by `detect`     | 3 levels, 20,000 entries | The search stops with a note                    |
 | Shared schemes read per project  | 200                      | The rest are ignored                            |
@@ -53,13 +54,28 @@ concurrency and test runners — instead of overflowing the stack.
 
 ### Lint time
 
-The time to lint one workflow grows with its size — its YAML nodes (at most 200,000) and the
-text of their values — not with the product of two of its parts. Each `env:` scope keeps only
-the names it sets and refers to the scope around it, so many workflow `env:` names over many
-steps are not copied into every step, and the workflow's and each job's settings that the rules
-need for every job or step (`permissions`, `concurrency`, `env`, `defaults.run.shell`) are
-looked up once. The test suite lints files of this kind, such as 30,000 workflow `env:` names
-over 30,000 steps, and expects each to finish within ten seconds.
+The time to lint one workflow grows with its size: its YAML nodes and the text of their values
+after alias expansion, at most 200,000 nodes and 4 MiB of text. An alias repeats a node without
+repeating its source, so the text limit is what stops one long anchored script, reused in
+thousands of steps, from being scanned once per step; a file within the 1 MiB read limit
+reaches 4 MiB only through aliases.
+
+Within those limits, the parts of a file that could otherwise make the work grow with the
+product of two of them are each read once:
+
+- Each `env:` scope keeps only the names it sets and refers to the scope around it, so many
+  workflow `env:` names over many steps are not copied into every step.
+- The workflow's and each job's settings that the rules need for every job or step
+  (`permissions`, `concurrency`, `env`, `defaults.run.shell`) are looked up once.
+- A job's runner labels are read once. A `${{ matrix.KEY }}` label is expanded once per key
+  and a label repeated through an alias is kept once, so a long `runs-on:` list over a long
+  matrix gives one `MCI004` finding per `macos-latest` value, not one per label and value.
+- A `# mobileci-ignore` comment line is read once, even when it repeats the marker.
+
+The test suite lints files of each kind, such as 30,000 workflow `env:` names over 30,000
+steps, 5,000 aliased matrix labels over 5,000 matrix values, a 100,000 character script in
+2,000 aliased steps and a comment of 15,000 markers, and expects each to finish within ten
+seconds.
 
 A run still lints every workflow it is given, up to 10,000 files per folder, so its total time
 grows with the number and size of those files. Give the job that runs the action a
