@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@bf610a4983a4fc55b272c414917e6ff504f5763f status=reviewed -->
+<!-- i18n-source: README.md@ed1511e700d40152eaed4f242aa7d11f82d58650 status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg" alt="MobileCI: Write, check and version the CI of iOS, Flutter and React Native apps."></picture></p>
@@ -34,7 +34,7 @@ MobileCI は、iOS、Flutter、React Native アプリの CI のためのコマ�
 - **モバイル workflow 向けの 16 個の lint ルール** — `macos-latest` のずれ、Xcode の選択漏れ、`| xcbeautify` に隠れたテスト失敗、タイムアウトの欠落、ピン留めされていない action、pull request タイトルからのスクリプトインジェクション、`pull_request_target` のチェックアウトなどを検出します。出力はテキスト、JSON、GitHub annotation、SARIF に対応しています。
 - **ひとつのバージョンコマンド** — `mobileci version bump patch --build` が `MARKETING_VERSION`、`pubspec.yaml`、`package.json`、`app.json`、`build.gradle` をまとめて更新します。Google Play の上限を超えるビルド番号はオーバーフローさせず、拒否します。
 - **信頼できないリポジトリでも安全** — ファイルはサイズ制限付きで読み込み、YAML のエイリアスとネストには上限があり、`detect` はシンボリックリンク先のフォルダには入らず、メッセージにファイルの内容を引用せず、annotation 出力から workflow コマンドを注入することもできません。
-- **テスト済みで、自分たちでも使用** — 125 個の Swift Testing テストが macOS と iPhone シミュレータで動作します。このリポジトリのサンプルの iOS と Flutter の workflow は `mobileci init` で書き出されており、ジェネレータの出力とずれると CI ジョブが失敗します。
+- **テスト済みで、自分たちでも使用** — 129 個の Swift Testing テストが macOS と iPhone シミュレータで動作します。このリポジトリのサンプルの iOS と Flutter の workflow は `mobileci init` で書き出されており、ジェネレータの出力とずれると CI ジョブが失敗します。
 
 ## クイックスタート
 

@@ -50,7 +50,7 @@ projects in a repository, write a workflow for each, lint workflows, and version
 - `Examples/WorkflowCheck` (an iOS app that lints workflows with MobileCIKit) and
   `Examples/flutter_sample`; their CI workflows are written by `mobileci init`, and
   `scripts/generate-workflows.sh --check` fails when any generated file drifts.
-- 125 Swift Testing tests, run on macOS and an iPhone simulator.
+- 129 Swift Testing tests, run on macOS and an iPhone simulator.
 
 ### Changed
 
