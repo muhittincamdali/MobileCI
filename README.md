@@ -47,7 +47,7 @@ a working pipeline without learning every runner detail first.
 - **Safe on untrusted repositories** — files are read with size limits, YAML aliases and
   nesting are bounded, `detect` does not descend into symlinked folders, messages never quote
   file content, and annotation output cannot inject workflow commands.
-- **Tested and dogfooded** — 121 Swift Testing tests run on macOS and an iPhone simulator;
+- **Tested and dogfooded** — 125 Swift Testing tests run on macOS and an iPhone simulator;
   the iOS and Flutter workflows of this repository's examples are written by `mobileci init`
   and a CI job fails when they drift from the generator.
 

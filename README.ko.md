@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@dd2916d8ed7ec53bff38f4304ac420eb57e36ab0 status=reviewed -->
+<!-- i18n-source: README.md@bf610a4983a4fc55b272c414917e6ff504f5763f status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileCI/main/.github/brand/banner-light.svg" alt="MobileCI: Write, check and version the CI of iOS, Flutter and React Native apps."></picture></p>
@@ -34,7 +34,7 @@ MobileCI는 iOS, Flutter, React Native 앱의 CI를 위한 커맨드 라인 도�
 - **모바일 workflow용 lint 규칙 16개** — `macos-latest` 드리프트, 누락된 Xcode 선택, `| xcbeautify` 뒤에 가려진 테스트 실패, 누락된 타임아웃, 고정되지 않은 action, pull request 제목을 통한 스크립트 인젝션, `pull_request_target` 체크아웃을 검사하며 출력은 텍스트, JSON, GitHub annotation, SARIF 형식을 지원합니다.
 - **하나의 버전 명령** — `mobileci version bump patch --build`가 `MARKETING_VERSION`, `pubspec.yaml`, `package.json`, `app.json`, `build.gradle`을 한꺼번에 업데이트하며, Google Play의 한도를 넘는 빌드 번호는 넘치게 두지 않고 거부합니다.
 - **신뢰할 수 없는 저장소에서도 안전** — 파일은 크기 제한을 두고 읽고, YAML 별칭과 중첩 깊이에는 한도가 있으며, `detect`는 심볼릭 링크로 연결된 폴더로 들어가지 않고, 메시지에는 파일 내용을 인용하지 않으며, annotation 출력으로는 workflow 명령을 주입할 수 없습니다.
-- **테스트를 거쳐 직접 사용 중** — 121개의 Swift Testing 테스트가 macOS와 iPhone 시뮬레이터에서 실행됩니다. 이 저장소 예제의 iOS 및 Flutter workflow는 `mobileci init`으로 작성되며, 생성기의 결과와 달라지면 CI 작업이 실패합니다.
+- **테스트를 거쳐 직접 사용 중** — 125개의 Swift Testing 테스트가 macOS와 iPhone 시뮬레이터에서 실행됩니다. 이 저장소 예제의 iOS 및 Flutter workflow는 `mobileci init`으로 작성되며, 생성기의 결과와 달라지면 CI 작업이 실패합니다.
 
 ## 빠른 시작
 
