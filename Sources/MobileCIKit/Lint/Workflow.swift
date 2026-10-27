@@ -5,6 +5,12 @@ struct Workflow {
     let root: YAMLValue
     let triggers: Set<String>
     let jobs: [Job]
+    // Looking a key up scans the mapping, and the rules ask for these for every job or step,
+    // so they are read once here.
+    let hasPermissions: Bool
+    let hasConcurrency: Bool
+    let env: YAMLValue?
+    let defaultShell: String?
 
     /// `nil` when the document is not a mapping with a `jobs` mapping.
     init?(root: YAMLValue) {
@@ -12,12 +18,11 @@ struct Workflow {
         self.root = root
         self.triggers = Workflow.triggers(of: root["on"])
         self.jobs = jobs.members.map { Job(id: $0.key, idLocation: $0.keyLocation, node: $0.value) }
+        self.hasPermissions = root["permissions"] != nil
+        self.hasConcurrency = root["concurrency"] != nil
+        self.env = root["env"]
+        self.defaultShell = root["defaults"]?["run"]?["shell"]?.string
     }
-
-    var hasPermissions: Bool { root["permissions"] != nil }
-    var hasConcurrency: Bool { root["concurrency"] != nil }
-    var env: YAMLValue? { root["env"] }
-    var defaultShell: String? { root["defaults"]?["run"]?["shell"]?.string }
 
     private static func triggers(of node: YAMLValue?) -> Set<String> {
         switch node {

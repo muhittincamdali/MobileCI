@@ -382,6 +382,9 @@ struct LintRuleTests {
         #expect(rules(bash).isEmpty)
         let defaults = yaml.replacingOccurrences(of: "jobs:\n", with: "defaults:\n  run:\n    shell: bash\njobs:\n")
         #expect(rules(defaults).isEmpty)
+        let jobDefaults = yaml.replacingOccurrences(of: "    timeout-minutes: 30\n",
+                                                    with: "    timeout-minutes: 30\n    defaults:\n      run:\n        shell: bash\n")
+        #expect(rules(jobDefaults).isEmpty)
     }
 
     @Test func pipedToolDetection() {

@@ -10,11 +10,15 @@ extension Rules {
         let workflowEnvironment = EnvironmentTaint(scope: context.workflow.env, over: nil, readsOuter: false)
         for job in context.workflow.jobs {
             let jobEnvironment = EnvironmentTaint(scope: job.env, over: workflowEnvironment, readsOuter: false)
+            // The shell GitHub uses for a step: the step's `shell`, then the job's and the
+            // workflow's `defaults.run.shell`. Looking a key up scans the mapping, so the job's
+            // default is read once here rather than again for every step.
+            let defaultShell = job.defaultShell ?? context.workflow.defaultShell
             for step in job.steps {
                 let environment = EnvironmentTaint(scope: step.env, over: jobEnvironment, readsOuter: true)
                 if let run = step.run, let script = run.string {
                     checkExpressions(in: script, at: run.location, isScript: true, environment: environment, &context)
-                    checkPipes(in: script, at: run.location, shell: shell(of: step, in: job, context.workflow), &context)
+                    checkPipes(in: script, at: run.location, shell: step.shell ?? defaultShell, &context)
                 }
                 if step.actionName == "actions/github-script", let script = step.with?["script"], let text = script.string {
                     checkExpressions(in: text, at: script.location, isScript: false, environment: environment, &context)
@@ -44,12 +48,6 @@ extension Rules {
                 }
             }
         }
-    }
-
-    /// The shell GitHub uses for a step: the step's `shell`, then the job's and the workflow's
-    /// `defaults.run.shell`.
-    private static func shell(of step: Step, in job: Job, _ workflow: Workflow) -> String? {
-        step.shell ?? job.defaultShell ?? workflow.defaultShell
     }
 
     /// Tools whose exit status a formatter pipe (`| xcbeautify`, `| xcpretty`, `| tee`) hides.
