@@ -1,0 +1,5 @@
+# Lines the hygiene scan is told to accept. Each pattern is matched against "path:line: text".
+# MobileCI writes a header line into every workflow it creates, which is product output and not a
+# trace of a development tool: the sample workflows, the templates and the Swift source that writes it.
+: # Generated[ ]by MobileCI \d+\.\d+\.\d+ \(https://github\.com/muhittincamdali/MobileCI\) for the
+WorkflowWriter\.swift:\d+: add\(0, "# Generated[ ]by MobileCI \\\(MobileCIInfo\.version\) \(

@@ -1,17 +1,26 @@
 version: 2
 updates:
-  - package-ecosystem: "swift"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    labels:
-      - "dependencies"
-    commit-message:
-      prefix: "chore(deps):"
-  
+  # The pins in .github/workflows and in action.yml. A pull request that updates a workflow made
+  # by `mobileci init` also needs the new commit in Sources/MobileCIKit/Generation/PinnedAction.swift
+  # (scripts/generate-workflows.sh --check fails until it is there).
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
-    labels:
-      - "ci"
+      interval: "monthly"
+    commit-message:
+      prefix: "ci"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "swift"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      swift:
+        patterns:
+          - "*"

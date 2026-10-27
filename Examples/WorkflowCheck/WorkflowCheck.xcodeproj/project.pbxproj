@@ -1,0 +1,459 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		8F85A5F219BB0ACA4142087A /* WorkflowCheckTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F24C8C72DA0E71BBEB9D059 /* WorkflowCheckTests.swift */; };
+		D3EC639624A5BE282258B844 /* CheckModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDCE6328F2196C187EEFAD24 /* CheckModel.swift */; };
+		ED9B08CF832B38124ACA2754 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F9902B6D2FBA739BA4A803 /* ContentView.swift */; };
+		F200DC44431E9904FD7A9B85 /* MobileCIKit in Frameworks */ = {isa = PBXBuildFile; productRef = B2FB96BC7E7C5B7387995547 /* MobileCIKit */; };
+		F4A38D5F9B1F461D425346CB /* Samples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81EB319933B69877D6BFCE43 /* Samples.swift */; };
+		F4E331613ECAA61C3C34A2A9 /* WorkflowCheckApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0128CE4E8FB52A82C9115F36 /* WorkflowCheckApp.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		02E7A98F18CF72879681A51E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 67EF64B5B0F5B03AAC65C80B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 19FFEBE5202EA857FC1B6E9E;
+			remoteInfo = WorkflowCheck;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0128CE4E8FB52A82C9115F36 /* WorkflowCheckApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkflowCheckApp.swift; sourceTree = "<group>"; };
+		4F24C8C72DA0E71BBEB9D059 /* WorkflowCheckTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkflowCheckTests.swift; sourceTree = "<group>"; };
+		5AD2F9A50B84B297C1DD9169 /* WorkflowCheck.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = WorkflowCheck.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		77EDF0E6767410DF0EFDCA00 /* MobileCI */ = {isa = PBXFileReference; lastKnownFileType = folder; name = MobileCI; path = ../..; sourceTree = SOURCE_ROOT; };
+		81EB319933B69877D6BFCE43 /* Samples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Samples.swift; sourceTree = "<group>"; };
+		CBC60849E2FD009F701C22AB /* WorkflowCheckTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = WorkflowCheckTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		CDCE6328F2196C187EEFAD24 /* CheckModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckModel.swift; sourceTree = "<group>"; };
+		F8F9902B6D2FBA739BA4A803 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E0C02D15EC5D735B8389A894 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F200DC44431E9904FD7A9B85 /* MobileCIKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		35F3D8E9B531D114283025A5 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				77EDF0E6767410DF0EFDCA00 /* MobileCI */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		9F36B3AF870BB9B9E165C14B /* WorkflowCheck */ = {
+			isa = PBXGroup;
+			children = (
+				CDCE6328F2196C187EEFAD24 /* CheckModel.swift */,
+				F8F9902B6D2FBA739BA4A803 /* ContentView.swift */,
+				81EB319933B69877D6BFCE43 /* Samples.swift */,
+				0128CE4E8FB52A82C9115F36 /* WorkflowCheckApp.swift */,
+			);
+			path = WorkflowCheck;
+			sourceTree = "<group>";
+		};
+		BB670934184601F687D6404E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				5AD2F9A50B84B297C1DD9169 /* WorkflowCheck.app */,
+				CBC60849E2FD009F701C22AB /* WorkflowCheckTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D38870F3BAED6C23B3E8D3EF = {
+			isa = PBXGroup;
+			children = (
+				35F3D8E9B531D114283025A5 /* Packages */,
+				9F36B3AF870BB9B9E165C14B /* WorkflowCheck */,
+				EAEA6698143FA5973FED9110 /* WorkflowCheckTests */,
+				BB670934184601F687D6404E /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		EAEA6698143FA5973FED9110 /* WorkflowCheckTests */ = {
+			isa = PBXGroup;
+			children = (
+				4F24C8C72DA0E71BBEB9D059 /* WorkflowCheckTests.swift */,
+			);
+			path = WorkflowCheckTests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		19FFEBE5202EA857FC1B6E9E /* WorkflowCheck */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 59ACBD208FE6939F93C29379 /* Build configuration list for PBXNativeTarget "WorkflowCheck" */;
+			buildPhases = (
+				97724A268D607B4F7BD718B3 /* Sources */,
+				E0C02D15EC5D735B8389A894 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = WorkflowCheck;
+			packageProductDependencies = (
+				B2FB96BC7E7C5B7387995547 /* MobileCIKit */,
+			);
+			productName = WorkflowCheck;
+			productReference = 5AD2F9A50B84B297C1DD9169 /* WorkflowCheck.app */;
+			productType = "com.apple.product-type.application";
+		};
+		4C8F9B70B3380125D8954D06 /* WorkflowCheckTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F2237570FB06A2AE068CE8B0 /* Build configuration list for PBXNativeTarget "WorkflowCheckTests" */;
+			buildPhases = (
+				F314E7B280D65B650B740427 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				30C9DE9F72E5653A94CDD6F1 /* PBXTargetDependency */,
+			);
+			name = WorkflowCheckTests;
+			packageProductDependencies = (
+			);
+			productName = WorkflowCheckTests;
+			productReference = CBC60849E2FD009F701C22AB /* WorkflowCheckTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		67EF64B5B0F5B03AAC65C80B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					19FFEBE5202EA857FC1B6E9E = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 5AE9520961B9251D2F7E21F9 /* Build configuration list for PBXProject "WorkflowCheck" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = D38870F3BAED6C23B3E8D3EF;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				553DE1F9BE084A0419B90038 /* XCLocalSwiftPackageReference "../.." */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = BB670934184601F687D6404E /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				19FFEBE5202EA857FC1B6E9E /* WorkflowCheck */,
+				4C8F9B70B3380125D8954D06 /* WorkflowCheckTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		97724A268D607B4F7BD718B3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D3EC639624A5BE282258B844 /* CheckModel.swift in Sources */,
+				ED9B08CF832B38124ACA2754 /* ContentView.swift in Sources */,
+				F4A38D5F9B1F461D425346CB /* Samples.swift in Sources */,
+				F4E331613ECAA61C3C34A2A9 /* WorkflowCheckApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F314E7B280D65B650B740427 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8F85A5F219BB0ACA4142087A /* WorkflowCheckTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		30C9DE9F72E5653A94CDD6F1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 19FFEBE5202EA857FC1B6E9E /* WorkflowCheck */;
+			targetProxy = 02E7A98F18CF72879681A51E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		075BAAAD343BCC2AB700EDF7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Workflow Check";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.muhittincamdali.WorkflowCheck;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		1F34585334F7BE28B290EC7A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.muhittincamdali.WorkflowCheckTests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WorkflowCheck.app/WorkflowCheck";
+			};
+			name = Release;
+		};
+		330170912D86148EFFC70872 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		B053B5C30F24F0DC4A1FD81A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		E7696658AC61BD73209A1BA1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Workflow Check";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.muhittincamdali.WorkflowCheck;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		EDC6FD1B3392560CB0C079B3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.muhittincamdali.WorkflowCheckTests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WorkflowCheck.app/WorkflowCheck";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		59ACBD208FE6939F93C29379 /* Build configuration list for PBXNativeTarget "WorkflowCheck" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E7696658AC61BD73209A1BA1 /* Debug */,
+				075BAAAD343BCC2AB700EDF7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		5AE9520961B9251D2F7E21F9 /* Build configuration list for PBXProject "WorkflowCheck" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				330170912D86148EFFC70872 /* Debug */,
+				B053B5C30F24F0DC4A1FD81A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F2237570FB06A2AE068CE8B0 /* Build configuration list for PBXNativeTarget "WorkflowCheckTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EDC6FD1B3392560CB0C079B3 /* Debug */,
+				1F34585334F7BE28B290EC7A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		553DE1F9BE084A0419B90038 /* XCLocalSwiftPackageReference "../.." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../..;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B2FB96BC7E7C5B7387995547 /* MobileCIKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MobileCIKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 67EF64B5B0F5B03AAC65C80B /* Project object */;
+}

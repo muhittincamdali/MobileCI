@@ -1,50 +1,65 @@
-name: 'Elite Swift 6 CI'
-description: 'The world-class, zero-bloat CI pipeline for modern Swift 6 mobile applications.'
+name: MobileCI lint
+description: Check the GitHub Actions workflows of an iOS, Flutter or React Native app for mobile CI problems and annotate the pull request.
+author: Muhittin Camdali
 branding:
-  icon: 'shield'
-  color: 'blue'
+  icon: check-circle
+  color: blue
+
 inputs:
-  swift-version:
-    description: 'The version of Swift to use for compilation.'
+  paths:
+    description: Workflow files or folders to check, separated by spaces. Empty checks .github/workflows of the checked-out repository.
     required: false
-    default: '6.0'
-  strict-concurrency:
-    description: 'Enforce strict concurrency checks.'
+    default: ""
+  format:
+    description: "github (annotations on the pull request), text, json or sarif."
     required: false
-    default: 'true'
-  binary-size-check:
-    description: 'Fail the build if the binary size exceeds the world-class threshold (1MB for core libraries).'
+    default: github
+  fail-on:
+    description: "Fail the step for findings of this severity or higher: error, warning, note or never."
     required: false
-    default: 'true'
+    default: warning
+  disable:
+    description: Rules to skip, by identifier or name, separated by commas (MCI012,floating-macos-image).
+    required: false
+    default: ""
+  output:
+    description: Write the report to this file instead of the log, for example results.sarif for github/codeql-action/upload-sarif.
+    required: false
+    default: ""
 
 runs:
-  using: "composite"
+  using: composite
   steps:
-    - name: Set up Swift
-      uses: swift-actions/setup-swift@v2
+    # The tool is built from the action's own checkout, so the version is the one in `uses:`.
+    - name: Cache the MobileCI build
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
-        swift-version: ${{ inputs.swift-version }}
-        
-    - name: Build with Architecture Purity
+        path: ${{ github.action_path }}/.build
+        key: mobileci-${{ runner.os }}-${{ runner.arch }}-${{ github.action_ref }}
+
+    - name: Build MobileCI
       shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+      run: swift build --package-path "$ACTION_PATH" --configuration release --product mobileci
+
+    - name: Lint the workflows
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        PATHS: ${{ inputs.paths }}
+        FORMAT: ${{ inputs.format }}
+        FAIL_ON: ${{ inputs.fail-on }}
+        DISABLE: ${{ inputs.disable }}
+        OUTPUT: ${{ inputs.output }}
       run: |
-        if [ "${{ inputs.strict-concurrency }}" = "true" ]; then
-          swift build -Xswiftc -strict-concurrency=complete
-        else
-          swift build
+        arguments=(lint --format "$FORMAT" --fail-on "$FAIL_ON")
+        if [[ -n "$DISABLE" ]]; then
+          arguments+=(--disable "$DISABLE")
         fi
-        
-    - name: Run High-Integrity Tests
-      shell: bash
-      run: swift test --parallel
-      
-    - name: Enforce Zero-Bloat Standard
-      if: ${{ inputs.binary-size-check == 'true' }}
-      shell: bash
-      run: |
-        SIZE=$(du -sk .build/debug/*.dylib 2>/dev/null | awk '{print $1}' || echo "0")
-        echo "Binary size: ${SIZE}KB"
-        if [ "$SIZE" -gt 1000 ]; then
-          echo "::error::Binary size exceeds 1MB threshold for world-class efficiency."
-          exit 1
+        read -r -a paths <<< "$PATHS"
+        if [[ -n "$OUTPUT" ]]; then
+          "$ACTION_PATH/.build/release/mobileci" "${arguments[@]}" "${paths[@]}" > "$OUTPUT"
+        else
+          "$ACTION_PATH/.build/release/mobileci" "${arguments[@]}" "${paths[@]}"
         fi
