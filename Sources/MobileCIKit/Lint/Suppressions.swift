@@ -31,13 +31,20 @@ struct Suppressions {
     private static let marker = "mobileci-ignore"
 
     private static func directive(in line: Substring) -> (wholeFile: Bool, rules: Set<RuleID>)? {
-        // A `#` can also appear inside a quoted value before the comment; try each one.
+        // A `#` can also appear inside a quoted value before the comment; try each one up to the
+        // first that starts with the marker. Rules after a later marker are words in the rest
+        // of this one, so when it names none, no later one does: stopping here keeps a line of
+        // repeated markers from being split once per `#`.
         for hash in line.indices where line[hash] == "#" {
-            if let directive = directive(after: line[line.index(after: hash)...]) { return directive }
+            if let directive = directive(after: line[line.index(after: hash)...]) {
+                return directive.rules.isEmpty ? nil : directive
+            }
         }
         return nil
     }
 
+    /// The directive in a comment that starts with the marker, with no rules when it names
+    /// none; `nil` when the comment does not start with the marker.
     private static func directive(after hash: Substring) -> (wholeFile: Bool, rules: Set<RuleID>)? {
         var comment = hash.drop { $0 == " " || $0 == "\t" }
         guard comment.hasPrefix(marker) else { return nil }
@@ -49,7 +56,6 @@ struct Suppressions {
         }
         guard comment.first == " " || comment.first == ":" || comment.first == "\t" else { return nil }
         let words = comment.split(whereSeparator: { $0 == " " || $0 == "," || $0 == ":" || $0 == "\t" || $0 == "\r" })
-        let rules = Set(words.compactMap { RuleID(identifier: String($0)) })
-        return rules.isEmpty ? nil : (wholeFile, rules)
+        return (wholeFile, Set(words.compactMap { RuleID(identifier: String($0)) }))
     }
 }

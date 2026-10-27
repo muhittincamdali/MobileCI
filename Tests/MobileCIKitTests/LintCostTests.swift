@@ -86,4 +86,23 @@ import Testing
         #expect(findings.map(\.rule) == [.invalidWorkflow])
         #expect(elapsed < Self.timeLimit)
     }
+
+    /// A comment line of 15,000 `#mobileci-ignore` markers above an unpinned action, once naming
+    /// no rule and once ending in `MCI001`. The line is read once, not again from every `#`.
+    @Test func commentLineOfRepeatedMarkers() {
+        let markers = String(repeating: "#mobileci-ignore ", count: 15000)
+        func workflow(_ comment: String) -> String {
+            Self.header + "jobs:\n  a:\n    runs-on: ubuntu-24.04\n    steps:\n      \(comment)\n"
+                + "      - uses: actions/checkout@v7\n"
+        }
+        var silent: [Finding] = []
+        var silenced: [Finding] = []
+        let elapsed = ContinuousClock().measure {
+            silent = lint(workflow(markers))
+            silenced = lint(workflow(markers + "MCI001"))
+        }
+        #expect(silent.contains { $0.rule == .unpinnedAction })
+        #expect(!silenced.contains { $0.rule == .unpinnedAction })
+        #expect(elapsed < Self.timeLimit)
+    }
 }
