@@ -330,6 +330,13 @@ struct LintRuleTests {
         let finding = lint(yaml).first { $0.rule == .secretInScript }
         #expect(finding?.location.line == 20)
         #expect(finding?.message.contains("`secrets.MATCH_PASSWORD`") == true)
+        // The whole context and an object filter write every secret into the script.
+        for whole in ["toJSON(secrets)", "join(secrets.*, ' ')", "join(SECRETS['*'], ' ')"] {
+            let expanded = yaml.replacingOccurrences(of: "secrets.MATCH_PASSWORD", with: whole)
+            let all = lint(expanded).first { $0.rule == .secretInScript }
+            #expect(all?.location.line == 20, "\(whole)")
+            #expect(all?.message.contains("every secret") == true, "\(whole)")
+        }
     }
 
     // MARK: MCI009

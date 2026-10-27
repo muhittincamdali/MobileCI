@@ -41,6 +41,9 @@ extension Rules {
                     let origin = quoted(source, allowed: propertyPathCharacters, fallback: "an event property")
                     context.report(.untrustedInputInScript, at: location,
                                    "The script expands \(shown), which is set from \(origin), text that anyone opening a pull request or issue can choose; read the variable when the script runs (a quoted shell variable, or `process.env` in github-script) instead.")
+                } else if isScript, readsAllSecrets(path) {
+                    context.report(.secretInScript, at: location,
+                                   "The script expands every secret the workflow can read into its source text; map the ones it needs to step `env:` variables instead.")
                 } else if isScript, path.lowercased().hasPrefix("secrets.") {
                     let shown = quoted(path, allowed: labelCharacters, fallback: "a secret")
                     context.report(.secretInScript, at: location,
@@ -48,6 +51,13 @@ extension Rules {
                 }
             }
         }
+    }
+
+    /// Whether `path` is the whole `secrets` context (`toJSON(secrets)`) or an object filter over
+    /// it (`secrets.*`, `secrets['*']`), which expand every secret.
+    private static func readsAllSecrets(_ path: String) -> Bool {
+        let lowered = path.lowercased()
+        return lowered == "secrets" || lowered.hasPrefix("secrets.*")
     }
 
     /// Tools whose exit status a formatter pipe (`| xcbeautify`, `| xcpretty`, `| tee`) hides.

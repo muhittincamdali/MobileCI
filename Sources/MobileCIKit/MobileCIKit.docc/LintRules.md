@@ -116,6 +116,10 @@ expressions (`${{ matrix.experimental }}`) are not reported.
 is visible to anything that can read the generated script file and is interpreted by the
 shell. Map it to an environment variable of the step instead.
 
+`${{ toJSON(secrets) }}` and an object filter such as `join(secrets.*, ' ')` are reported
+too. They write every secret the workflow can read, `GITHUB_TOKEN` included, into the script;
+the message names none of them. Map only the secrets the step needs, each to its own variable.
+
 ### MCI012 checkout-persists-credentials (note)
 
 `actions/checkout` stores `GITHUB_TOKEN` in `.git/config` unless told not to; every later
