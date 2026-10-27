@@ -45,8 +45,9 @@ remap = [
   '^https://github\.com/muhittincamdali/MobileCI/(?:blob|tree)/main/(.*)$ file:///home/runner/work/MobileCI/MobileCI/$1',
   # The article pages on GitHub Pages are built from the .docc articles by docs.yml after a push
   # to main, so a pull request that adds an article links to a page that is not online yet. Each
-  # article URL is checked against its source file instead; the documentation root stays a live
-  # check, so a site that is down still fails.
+  # article URL is checked against its source file instead, and so is the documentation root,
+  # whose first deployment also comes after the merge.
+  '^https://muhittincamdali\.github\.io/MobileCI/documentation/mobilecikit/?$ file:///home/runner/work/MobileCI/MobileCI/Sources/MobileCIKit/MobileCIKit.docc/MobileCIKit.md',
   '^https://muhittincamdali\.github\.io/MobileCI/documentation/mobilecikit/limitsandsafety$ file:///home/runner/work/MobileCI/MobileCI/Sources/MobileCIKit/MobileCIKit.docc/LimitsAndSafety.md',
   '^https://muhittincamdali\.github\.io/MobileCI/documentation/mobilecikit/gettingstarted$ file:///home/runner/work/MobileCI/MobileCI/Sources/MobileCIKit/MobileCIKit.docc/GettingStarted.md',
   '^https://muhittincamdali\.github\.io/MobileCI/documentation/mobilecikit/generatingworkflows$ file:///home/runner/work/MobileCI/MobileCI/Sources/MobileCIKit/MobileCIKit.docc/GeneratingWorkflows.md',
