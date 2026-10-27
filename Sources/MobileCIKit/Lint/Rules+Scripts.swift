@@ -7,7 +7,7 @@ extension Rules {
         // GitHub takes `env.NAME` from the step, then the job, then the workflow. Only a step
         // `env:` value can read `env`; in a job or workflow `env:` the context is not available
         // and `${{ env.A }}` expands to an empty string.
-        let workflowEnvironment = EnvironmentTaint(scope: context.workflow.env, over: .empty, readsOuter: false)
+        let workflowEnvironment = EnvironmentTaint(scope: context.workflow.env, over: nil, readsOuter: false)
         for job in context.workflow.jobs {
             let jobEnvironment = EnvironmentTaint(scope: job.env, over: workflowEnvironment, readsOuter: false)
             for step in job.steps {

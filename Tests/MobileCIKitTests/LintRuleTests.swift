@@ -266,9 +266,9 @@ struct LintRuleTests {
         #expect(!rules(yaml).contains(.untrustedInputInScript))
     }
 
-    /// Every `env:` value in three scopes reads the whole `env` context. Each scope is worked out
-    /// once, so a pull request that adds such a file cannot hold the lint step until its job
-    /// times out; following the values again for every member took minutes at 300 per scope.
+    /// Every `env:` value in three scopes reads the whole `env` context. A value that reads `env`
+    /// looks its names up in the scopes around it; following the values again for every member
+    /// took minutes at 300 per scope. `LintCostTests` covers many names over many steps.
     @Test func envValuesThatReadEnvAgainStayFast() {
         let count = 1000
         func members(_ prefix: String, indent: String) -> String {
@@ -282,6 +282,19 @@ struct LintRuleTests {
         let elapsed = ContinuousClock().measure { found = rules(yaml) }
         #expect(found.contains(.untrustedInputInScript))
         #expect(elapsed < .seconds(10))
+    }
+
+    /// For `toJSON(env)` a name hides the outer value in whichever scope sets it: an untrusted
+    /// workflow `A` and `B` under a job `A` and a step `B` do not reach the script, while a third
+    /// untrusted workflow name does.
+    @Test func wholeEnvSkipsNamesHiddenInInnerScopes() {
+        let untrusted = "  B: ${{ github.head_ref }}\n"
+        let yaml = "env:\n  A: ${{ github.head_ref }}\n" + untrusted
+            + cleanWorkflow.replacingOccurrences(of: "    env:\n", with: "    env:\n      A: fixed\n")
+            + "\n      - env:\n          B: fixed\n        run: echo '${{ toJSON(env) }}'\n"
+        #expect(!rules(yaml).contains(.untrustedInputInScript))
+        let third = yaml.replacingOccurrences(of: untrusted, with: untrusted + "  C: ${{ github.head_ref }}\n")
+        #expect(rules(third).contains(.untrustedInputInScript))
     }
 
     @Test func envExpressionsWithTrustedValuesPass() {
