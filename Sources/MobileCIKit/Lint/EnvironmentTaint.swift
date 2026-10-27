@@ -31,10 +31,12 @@ final class EnvironmentTaint {
     }
 
     /// The untrusted property that `path` (`env.NAME`, or the whole `env` context) is set from.
+    /// An object filter (`env.*`, `env['*']`) reads every value, as `join(env.*, ' ')` expands
+    /// them all, so it counts as the whole context.
     func untrustedSource(of path: String) -> String? {
         let segments = path.lowercased().split(separator: ".", omittingEmptySubsequences: false)
         guard segments.first == "env" else { return nil }
-        guard segments.count > 1 else { return visibleName(at: 0)?.source }
+        guard segments.count > 1, segments[1] != "*" else { return visibleName(at: 0)?.source }
         return source(of: String(segments[1]))
     }
 

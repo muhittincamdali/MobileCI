@@ -226,6 +226,11 @@ struct LintRuleTests {
         }
         let finding = lint(yaml).first { $0.rule == .untrustedInputInScript }
         #expect(finding?.message.contains("is set from `github.event.pull_request.title`") == true)
+        // An object filter reads every value of the context, like `toJSON(env)`.
+        for whole in ["toJSON(env)", "join(env.*, ' ')", "join(env['*'], ' ')"] {
+            let expanded = yaml.replacingOccurrences(of: "env.TITLE", with: whole, options: .caseInsensitive)
+            #expect(rules(expanded).contains(.untrustedInputInScript), "\(scope): \(whole)")
+        }
     }
 
     /// A step `env:` value that reads `env` again is evaluated against the job and workflow
