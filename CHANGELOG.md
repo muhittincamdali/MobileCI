@@ -5,7 +5,7 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.0.0] - 2026-10-27
 
 MobileCI 2 is a rewrite. The tool now does four things and tests each of them: detect the
 projects in a repository, write a workflow for each, lint workflows, and version apps. The
@@ -99,5 +99,5 @@ projects in a repository, write a workflow for each, lint workflows, and version
 - Workflow templates for iOS, Flutter and React Native, fastlane files and shell scripts.
 - A `mobileci` command-line tool with build, test, deploy and workflow generation commands.
 
-[Unreleased]: https://github.com/muhittincamdali/MobileCI/compare/v1.0.0...HEAD
+[2.0.0]: https://github.com/muhittincamdali/MobileCI/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/muhittincamdali/MobileCI/releases/tag/v1.0.0
