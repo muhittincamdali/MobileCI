@@ -43,6 +43,19 @@ struct Job {
     let id: String
     let idLocation: SourceLocation
     let node: YAMLValue
+    /// The runner labels with their locations, each label and location once. A
+    /// `${{ matrix.<key> }}` label is replaced by the values listed for that key under
+    /// `strategy.matrix` (including `include` entries). Read once here: the rules ask for every
+    /// macOS job, and a label repeated through an alias would otherwise expand the matrix again
+    /// for every repeat.
+    let runnerLabels: [RunnerLabel]
+
+    init(id: String, idLocation: SourceLocation, node: YAMLValue) {
+        self.id = id
+        self.idLocation = idLocation
+        self.node = node
+        self.runnerLabels = Job.runnerLabels(of: node)
+    }
 
     /// `uses:` at job level: a call to a reusable workflow, which has no steps of its own.
     var reusableWorkflow: YAMLValue? { node["uses"] }
@@ -50,9 +63,13 @@ struct Job {
     var env: YAMLValue? { node["env"] }
     var defaultShell: String? { node["defaults"]?["run"]?["shell"]?.string }
 
-    /// The runner labels with their locations. A `${{ matrix.<key> }}` label is replaced by the
-    /// values listed for that key under `strategy.matrix` (including `include` entries).
-    var runnerLabels: [(label: String, location: SourceLocation)] {
+    /// Whether any runner label names a macOS runner (`macos-26`, `macos-latest-xlarge`, or the
+    /// `macOS` label of a self-hosted runner).
+    var runsOnMacOS: Bool {
+        runnerLabels.contains { $0.label.lowercased().hasPrefix("macos") }
+    }
+
+    private static func runnerLabels(of node: YAMLValue) -> [RunnerLabel] {
         guard let runsOn = node["runs-on"] else { return [] }
         let written: [YAMLValue]
         switch runsOn {
@@ -63,31 +80,46 @@ struct Job {
         case .mapping:
             written = runsOn["labels"].map { $0.items.isEmpty ? [$0] : $0.items } ?? []
         }
-        return written.flatMap { value -> [(String, SourceLocation)] in
-            guard let text = value.string else { return [] }
-            if let key = Job.matrixKey(in: text) {
-                return matrixValues(for: key)
-            }
-            return [(text, value.location)]
+        let keys = Set(written.compactMap { $0.string.flatMap(matrixKey(in:)) })
+        let values = keys.isEmpty ? [:] : matrixValues(for: keys, in: node["strategy"]?["matrix"])
+        var labels: [RunnerLabel] = []
+        var seen = Set<RunnerLabel>()
+        var expandedKeys = Set<String>()
+        func add(_ label: RunnerLabel) {
+            if seen.insert(label).inserted { labels.append(label) }
         }
+        for value in written {
+            guard let text = value.string else { continue }
+            guard let key = matrixKey(in: text) else {
+                add(RunnerLabel(label: text, location: value.location))
+                continue
+            }
+            if expandedKeys.insert(key).inserted { values[key]?.forEach(add) }
+        }
+        return labels
     }
 
-    /// Whether any runner label names a macOS runner (`macos-26`, `macos-latest-xlarge`, or the
-    /// `macOS` label of a self-hosted runner).
-    var runsOnMacOS: Bool {
-        runnerLabels.contains { $0.label.lowercased().hasPrefix("macos") }
-    }
-
-    private func matrixValues(for key: String) -> [(String, SourceLocation)] {
-        guard let matrix = node["strategy"]?["matrix"] else { return [] }
-        var values: [(String, SourceLocation)] = []
-        for item in matrix[key]?.items ?? [] {
-            if let text = item.string { values.append((text, item.location)) }
+    /// The values of each of `keys` in one pass over the matrix: those listed under the key,
+    /// then those set by `include` entries.
+    private static func matrixValues(for keys: Set<String>, in matrix: YAMLValue?) -> [String: [RunnerLabel]] {
+        guard let matrix else { return [:] }
+        var listed: [String: [RunnerLabel]] = [:]
+        var included: [String: [RunnerLabel]] = [:]
+        for member in matrix.members where keys.contains(member.key) {
+            for item in member.value.items {
+                if let text = item.string {
+                    listed[member.key, default: []].append(RunnerLabel(label: text, location: item.location))
+                }
+            }
         }
         for entry in matrix["include"]?.items ?? [] {
-            if let item = entry[key], let text = item.string { values.append((text, item.location)) }
+            for member in entry.members where keys.contains(member.key) {
+                if let text = member.value.string {
+                    included[member.key, default: []].append(RunnerLabel(label: text, location: member.value.location))
+                }
+            }
         }
-        return values
+        return listed.merging(included) { $0 + $1 }
     }
 
     /// `os` for `${{ matrix.os }}`; `nil` for any other text.
@@ -101,6 +133,12 @@ struct Job {
         guard !key.isEmpty, key.unicodeScalars.allSatisfy(allowed.contains) else { return nil }
         return key
     }
+}
+
+/// A runner label and where it is written.
+struct RunnerLabel: Hashable {
+    let label: String
+    let location: SourceLocation
 }
 
 /// One entry under `steps:`.

@@ -56,4 +56,21 @@ import Testing
         #expect(findings.filter { $0.rule == .macOSWorkflowWithoutConcurrency }.count == count)
         #expect(elapsed < Self.timeLimit)
     }
+
+    /// 5,000 `macos-latest` matrix values and 5,000 runner labels that repeat `${{ matrix.os }}`
+    /// through an alias. The matrix is expanded once per key and each label once, so the job
+    /// reports each value once instead of once for every label that names it.
+    @Test func matrixLabelRepeatedThroughAnAlias() {
+        let count = 5000
+        let values = Array(repeating: "macos-latest", count: count).joined(separator: ", ")
+        let labels = ["&m \"${{ matrix.os }}\""] + Array(repeating: "*m", count: count - 1)
+        let yaml = Self.header + "jobs:\n  a:\n    timeout-minutes: 30\n    strategy:\n      matrix:\n"
+            + "        os: [\(values)]\n        include: [{os: macos-latest-xlarge}]\n"
+            + "    runs-on: [\(labels.joined(separator: ", "))]\n    steps: [{run: x}]\n"
+        var findings: [Finding] = []
+        let elapsed = ContinuousClock().measure { findings = lint(yaml) }
+        #expect(findings.filter { $0.rule == .floatingMacOSImage }.count == count + 1)
+        #expect(findings.filter { $0.rule == .macOSWorkflowWithoutConcurrency }.count == 1)
+        #expect(elapsed < Self.timeLimit)
+    }
 }

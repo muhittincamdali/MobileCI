@@ -101,9 +101,9 @@ enum Rules {
                 context.report(.macOSWorkflowWithoutConcurrency, at: job.idLocation,
                                "Job \(jobName(job)) runs on macOS but no concurrency group cancels superseded runs of this workflow.")
             }
-            for (label, location) in job.runnerLabels where label.lowercased().hasPrefix("macos-latest") {
-                let shown = quoted(label, allowed: labelCharacters, fallback: "macos-latest")
-                context.report(.floatingMacOSImage, at: location,
+            for runner in job.runnerLabels where runner.label.lowercased().hasPrefix("macos-latest") {
+                let shown = quoted(runner.label, allowed: labelCharacters, fallback: "macos-latest")
+                context.report(.floatingMacOSImage, at: runner.location,
                                "\(shown) moves to a new macOS image and default Xcode without a change in this repository; use a versioned label such as `macos-26`.")
             }
         }
