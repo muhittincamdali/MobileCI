@@ -90,6 +90,10 @@ same way. `toJSON(env)` and an object filter such as `join(env.*, ' ')` expand e
 so they are reported when any name in them is untrusted. A step value that reads `env` again,
 such as `B: ${{ env.A }}`, is followed into the job and workflow `env:` that GitHub evaluates
 it against; a job or workflow value cannot read `env`, so there it is not followed.
+An index worked out while the workflow runs, such as `env[format('{0}', 'TITLE')]` or
+`github.event[format('{0}', 'issue')].title`, is not followed: the rule reads the names
+written in the expression and cannot tell which property the index picks, so it reports
+nothing there. Write the property name out instead.
 Pass the value through `env:` and quote the variable:
 
 ```yaml
